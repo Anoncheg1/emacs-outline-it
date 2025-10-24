@@ -7,6 +7,21 @@
 - customizable for any headers
 - integration of outline with jumping such as xref and goto
 
+# Configuration
+To use, defune your outline-it-your function same way like ```outline-it-python``` and ```outline-it-githubactionlog``` defined.
+
+Then use M-x outline-it-your
+
+```lisp
+(defun outline-it-githubactionlog ()
+  "For Github Action Melpazoid log of run.
+where is goups with substring ##[group].
+To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
+  (interactive)
+  (setq-local outline-it-heading-alist '(("##\\[group]" . 1) ("⸺ " . 2)))
+  (outline-it ".*##\\[group]\\|.*⸺ "))
+
+```
 
 # Other packages for same purpose from other authors:
 - 2w https://github.com/jdtsmith/outli (font-lock)

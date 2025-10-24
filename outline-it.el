@@ -409,7 +409,7 @@ to escape regex characters."
 
 
 (defun outline-it-githubactionlog ()
-  "for /tmp/0_build.txt with log of github action run log.
+  "For Github Action Melpazoid log.
 where is goups with substring ##[group].
 To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
   (interactive)

@@ -29,6 +29,14 @@
 
 ;;; Commentary:
 
+;; (add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
+;; (require 'outline-it)
+;;
+;; M-x outline-it-githubactionlog
+;; M-x outline-it-python
+;;
+;; Recommend to bind: (keymap-local-set "C-c C-e" #'my/outline-hide-others)
+;;
 ;;; Code:
 ;;; -- Code
 (require 'outline)

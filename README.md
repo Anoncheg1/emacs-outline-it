@@ -13,6 +13,9 @@ To use, defune your outline-it-your function same way like ```outline-it-python`
 Then use M-x outline-it-your
 
 ```lisp
+(add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
+(require 'outline-it)
+
 (defun outline-it-githubactionlog ()
   "For Github Action Melpazoid log of run.
 where is goups with substring ##[group].
@@ -22,6 +25,9 @@ To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
   (outline-it ".*##\\[group]\\|.*⸺ "))
 
 ```
+
+
+Recommend to bind ```(keymap-local-set "C-c C-e" #'my/outline-hide-others)```
 
 # Other packages for same purpose from other authors:
 - 2w https://github.com/jdtsmith/outli (font-lock)

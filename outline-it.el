@@ -166,23 +166,26 @@ Activated in outline-mode init hook."
     (outline-show-entry) ;; show local text
     (print "my/outline-hide-other1")
     (condition-case nil
-        (outline-up-heading 1 t) ;; go upper - signal warning
-      (error nil)
-      )
-    (print "my/outline-hide-other2")
-    (outline-show-entry)
-    (while (> (progn (outline-back-to-heading t)
-                     (funcall outline-level))
-              1) ;; while not at first header
-      (outline-show-entry)
-      (outline-show-children) ;; show subheaders
-      (print "my/outline-hide-other3")
-      (condition-case nil
-          (outline-up-heading 1 t) ;; go upper  - signal warning
-        (error nil)
-        ))
-    )
-  )
+        (progn
+          (outline-up-heading 1 t) ;; go upper - signal warning
+          ;; (print "my/outline-hide-other2")
+          ;; (outline-show-entry)
+          (while (> (progn ;; (outline-back-to-heading t)
+                      (funcall outline-level))
+                    1) ;; while not at first header
+            (print (list "my/outline-hide-other3" (progn (outline-back-to-heading t)
+                                                         (funcall outline-level))
+                         (point)))
+            (outline-show-entry)
+            (outline-show-children) ;; show subheaders
+
+            (condition-case nil
+                (outline-up-heading 1 t) ;; go upper  - signal warning
+              (error nil)
+              )
+
+            ))
+            (error nil))))
 
 ;; (defun my/outline-tab-old ()
 ;;   "compare full line at cursor position with outline template for
@@ -292,7 +295,7 @@ For `outline-minor-mode we set variables:
   "Fix clicking buttons in Backtrace."
   (when (bound-and-true-p outline-minor-mode)
     (outline-show-all)
-    (my/outline-hide-other)))
+    (my/outline-hide-others)))
 
 (advice-add 'help-function-def--button-function :after #'my/outline-help-function-def)
 
@@ -302,7 +305,7 @@ For `outline-minor-mode we set variables:
   (when (and (bound-and-true-p outline-minor-mode)
              arg)
     (outline-show-all)
-    (my/outline-hide-other)))
+    (my/outline-hide-others)))
 
 (advice-add 'set-mark-command :after #'my/outline-set-mark-command)
 ;; (advice-remove 'set-mark-command #'my/outline-set-mark-command)

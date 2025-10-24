@@ -28,6 +28,9 @@ To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
 
 
 Recommend to bind ```(keymap-local-set "C-c C-e" #'my/outline-hide-others)```
+# Screen
+
+![outline-it](https://raw.githubusercontent.com/Anoncheg1/public-share/main/outline-it.png)
 
 # Other packages for same purpose from other authors:
 - 2w https://github.com/jdtsmith/outli (font-lock)

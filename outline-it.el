@@ -300,8 +300,18 @@ For `outline-minor-mode we set variables:
 
 ;;; -- -- Backtrace clicks
 (defun my/outline-help-function-def(&rest r)
-  "Fix clicking buttons in Backtrace."
-  (when (bound-and-true-p outline-minor-mode)
+  "Fix clicking buttons in Backtrace.
+Executed for buffer with
+- outline-minor-mode activated.
+- .emacs files
+- elisp files with .dir-locals.el file in current directory."
+  (when (or (bound-and-true-p outline-minor-mode)
+            (and (derived-mode-p 'emacs-lisp-mode)
+                 (buffer-file-name)
+                 (or
+                     (file-exists-p (expand-file-name ".dir-locals.el" default-directory))
+                     (and (buffer-file-name) (or (string-equal (file-name-nondirectory  (buffer-file-name)) ".emacs")
+                                                 (string-equal (file-name-nondirectory (buffer-file-name)) "init.el"))))))
     (outline-show-all)
     (my/outline-hide-others)))
 

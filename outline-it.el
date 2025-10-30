@@ -28,9 +28,13 @@
 ;; <https://www.gnu.org/licenses/agpl-3.0.en.html>
 
 ;;; Commentary:
+;; Add advices at loading!
 
+;; Configuration:
 ;; (add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
 ;; (require 'outline-it)
+;; (add-hook 'outline-minor-mode-hook 'my/outline-minor-mode-hook) ; optional, for .emacs
+
 ;;
 ;; M-x outline-it-githubactionlog
 ;; M-x outline-it-python
@@ -42,13 +46,19 @@
 (require 'outline)
 (require 'org)
 
+(setq outline-font-lock-faces (vconcat org-level-faces)) ; test: (progn (outline-back-to-heading) (outline-font-lock-face) )
+(setq-local font-lock-defaults
+              '(outline-font-lock-keywords t nil nil backward-paragraph))
+(setq outline-minor-mode-highlight t)
 ;;; -- TAB key - indent.el configuration
-(defvar my/indent-line-function-original)
+(defvar outline-it--indent-line-function-original nil)
 
 (defun my/outline-tab ()
-"compare full line at cursor position with outline template for
-header. [rooted]"
-
+  "Compare full line at cursor position with outline template for
+header. [rooted]
+Return 'noindent if success.
+Uses `outline-regexp' variable."
+  (interactive)
   (if (string-match outline-regexp
                 (buffer-substring (line-beginning-position)
                                   (line-end-position)))
@@ -57,9 +67,9 @@ header. [rooted]"
       'noindent ; stop TAB sequence
       )
     ;; else - not header
-    (indent--funcall-widened my/indent-line-function-original)
+    (indent--funcall-widened outline-it--indent-line-function-original)
 
-    ;; (indent--funcall-widened (default-value 'indent-line-function)) ; my/indent-line-function-original
+    ;; (indent--funcall-widened (default-value 'indent-line-function)) ; outline-it--indent-line-function-original
     ;; (let ((old-indent (current-indentation)))
     ;;   (lisp-indent-line)
     ;;   ;; - align
@@ -73,30 +83,30 @@ header. [rooted]"
     )
   )
 
-(defun my/outline-minor-mode-hook1 ()
+(defun my/outline-minor-mode-hook ()
+  "Used for show/hide outline by indent-for-tab-command.
+`outline-regexp' variable used.
+Also configure isearch for C-M-s."
   (if outline-minor-mode
     (progn
-      ;; - restore after applying "Local variables" for this config
-      (if (and (buffer-file-name) (or (string-equal (file-name-nondirectory  (buffer-file-name)) ".emacs")
-                                      (string-equal (file-name-nondirectory (buffer-file-name)) "init.el")))
-          (setq-local indent-line-function #'lisp-indent-line)
-        )
+      ;; - set
+      (print "my/outline-minor-mode-hook1")
+      (add-hook 'isearch-mode-hook 'my/outline-header-search nil t)
 
-      (setq-local my/indent-line-function-original indent-line-function)
-      (setq-local indent-line-function #'my/outline-tab)
-      ;; (setq-local tab-always-indent t)
-      )
+      ;; (when (and (buffer-file-name) (or (string-equal (file-name-nondirectory  (buffer-file-name)) ".emacs")
+      ;;                                 (string-equal (file-name-nondirectory (buffer-file-name)) "init.el")))
+
+      (unless outline-it--indent-line-function-original
+        (setq-local outline-it--indent-line-function-original indent-line-function) ; save
+        (setq-local indent-line-function #'my/outline-tab)))
 
     ;; else - restore
-      (if (bound-and-true-p my/indent-line-function-original)
-    (setq-local indent-line-function my/indent-line-function-original))
-   ;; (setq-local tab-always-indent (default-value tab-always-indent))
-  )
-   ; do not call (completion-at-point) after indent
-  ;; (setq-default indent-line-function nil)
-)
+    (when outline-it--indent-line-function-original
+      (print "my/outline-minor-mode-hook2")
+        (setq-local indent-line-function outline-it--indent-line-function-original)
+        (setq-local outline-it--indent-line-function-original nil))))
 
-(add-hook 'outline-minor-mode-hook 'my/outline-minor-mode-hook1)
+;; (add-hook 'outline-minor-mode-hook 'my/outline-minor-mode-hook)
 ;; (remove-hook 'outline-minor-mode-hook 'my/outline-mode-hook1)
 
 ;;; -- add C-u C-w behavior to copy only headers
@@ -126,11 +136,12 @@ Activated in outline-mode init hook."
         (string-join (append pre-outline headers) "\n"))
     ;; else - no prefix
     (buffer-substring--filter beg end delete)))
-;;; -- fix for outline-level function, that match full line from outline-heading-alist by default
+;;; -- outline-level - function, fix, that match full line from outline-heading-alist by default
 ;; (defun my/outline-string-prefix-p ()
 ;; (string-match REGEXP STRING
 (defun my/outline-level ()
-  "We add `string-match' for assoc as TESTFN to find level."
+  "We add `string-match' for assoc as TESTFN to find level.
+  Depends on `outline-regexp'."
   (let ((ma (substring-no-properties (match-string 0))))
   ;; (print outline-heading-alist)
   ;; (print ma)
@@ -139,9 +150,21 @@ Activated in outline-mode init hook."
   (or (cdr (assoc ma outline-heading-alist 'string-match))
       (- (match-end 0) (match-beginning 0)))))
 
-(setq outline-level #'my/outline-level)
-(advice-remove 'outline-back-to-heading 'fix-for-org-fold)
-;;; -- hook and keys
+(defun my/outline-level2 ()
+  "Return the depth to which a statement is nested in the outline.
+Point must be at the beginning of a header line.
+This is actually either the level specified in `outline-heading-alist'
+or else the number of characters matched by `outline-regexp'."
+  (or (cdr (assoc (match-string 0) outline-heading-alist))
+      (- (match-end 0) (match-beginning 0))))
+
+;; - set in buffer by
+   ;; (setq-local outline-level #'my/outline-level)
+;; - To test:
+   ;; (progn (outline-back-to-heading t)
+   ;;        (funcall outline-level))
+
+;;; -- keys
 ;; same as my/org-fold-hide-other, but "sublevels 20"
 
 ;; (defun outline-back-to-heading (&optional invisible-ok)
@@ -217,24 +240,25 @@ Activated in outline-mode init hook."
 ;;     ))
 
 (defun my/outline-header-search ()
+  "We use part of outline-regexp string to isearch in headers."
   (if isearch-regexp
       (progn
         (setq isearch-case-fold-search 1)   ; make searches case insensitive
         (setq case-fold-search 1)   ; make searches case insensitive
         (isearch-push-state)
-        ;; (setq string "^*.*")
-        (let ((string "^;; --.*"))
+        (let ((string
+               (concat (car (string-split outline-regexp "\\\\|")) ".*")))
           (isearch-process-search-string
            string (mapconcat 'isearch-text-char-description string ""))))))
 
-
+;;; - Old hook
 (defun my/outline-mode-hook ()
   "for (add-hook 'outline-minor-mode-hook 'my/outline-mode-hook)
 For `outline-minor-mode we set variables:
 - `outline-regexp'
 - `outline-heading-alist'
 ."
-  (print outline-regexp)
+  ;; (print outline-regexp)
   ;; - Problem here: outline-minor mode do not respect 'outline-regexp' and somehow reinitialize it.
 
   ;; Case 1) .emacs - default
@@ -279,44 +303,49 @@ For `outline-minor-mode we set variables:
   (setq-local filter-buffer-substring-function #'my/outline-copy-outline-headers)
   )
 
-(add-hook 'outline-minor-mode-hook 'my/outline-mode-hook)
+;; (add-hook 'outline-minor-mode-hook 'my/outline-mode-hook)
+;; (remove-hook 'outline-minor-mode-hook 'my/outline-mode-hook)
 ;;; -- fixes for other modes
 ;;; -- -- C-, xref jump
-(defun my/fix-xref-outline (orig-fun &rest args)
+(defun outline-it--fix-xref-outline (orig-fun &rest args)
   "Fix bug when we jump C-, to place hidden header."
   (apply orig-fun args)
   (when (eq (get-char-property (point) 'invisible) 'outline)
       ;; (bound-and-true-p outline-minor-mode)
     ;; (outline-show-all)
     ;; (outline-hide-other)
-    (outline-hide-sublevels 7)
+    (outline-hide-body)
+    ;; (outline-hide-sublevels 7)
     (outline-show-entry)
     ))
 
-(advice-add 'xref-find-definitions :around #'my/fix-xref-outline)
-(advice-add 'xref-go-back :around #'my/fix-xref-outline)
-(advice-add 'goto-line :around #'my/fix-xref-outline)
-(advice-add 'compile-goto-error :around #'my/fix-xref-outline)
+;; ;;; -- -- Backtrace clicks (old)
+;; (defun my/outline-help-function-def(&rest r)
+;;   "Fix clicking buttons in Backtrace.
+;; Executed for buffer with
+;; - outline-minor-mode activated.
+;; - .emacs files
+;; - elisp files with .dir-locals.el file in current directory."
+;;   (when (or (bound-and-true-p outline-minor-mode)
+;;             (and (derived-mode-p 'emacs-lisp-mode)
+;;                  (buffer-file-name)
+;;                  (or
+;;                      (file-exists-p (expand-file-name ".dir-locals.el" default-directory))
+;;                      (and (buffer-file-name) (or (string-equal (file-name-nondirectory  (buffer-file-name)) ".emacs")
+;;                                                  (string-equal (file-name-nondirectory (buffer-file-name)) "init.el"))))))
+;;     (outline-show-all)
+;;     (my/outline-hide-others)))
 
-;;; -- -- Backtrace clicks
-(defun my/outline-help-function-def(&rest r)
-  "Fix clicking buttons in Backtrace.
-Executed for buffer with
-- outline-minor-mode activated.
-- .emacs files
-- elisp files with .dir-locals.el file in current directory."
-  (when (or (bound-and-true-p outline-minor-mode)
-            (and (derived-mode-p 'emacs-lisp-mode)
-                 (buffer-file-name)
-                 (or
-                     (file-exists-p (expand-file-name ".dir-locals.el" default-directory))
-                     (and (buffer-file-name) (or (string-equal (file-name-nondirectory  (buffer-file-name)) ".emacs")
-                                                 (string-equal (file-name-nondirectory (buffer-file-name)) "init.el"))))))
-    (outline-show-all)
-    (my/outline-hide-others)))
-
-(advice-add 'help-function-def--button-function :after #'my/outline-help-function-def)
-
+;;; -- -- advices activation
+;; dont depend on outline-minor-mode
+(advice-add 'xref-find-definitions :around #'outline-it--fix-xref-outline)
+(advice-add 'xref-go-back :around #'outline-it--fix-xref-outline)
+(advice-add 'goto-line :around #'outline-it--fix-xref-outline)
+(advice-add 'compile-goto-error :around #'outline-it--fix-xref-outline)
+(advice-add 'help-function-def--button-function :around #'outline-it--fix-xref-outline)
+(advice-add 'set-mark-command :after #'my/outline-set-mark-command)
+;; depend on outline-minor-mode
+;; (advice-add 'help-function-def--button-function :after #'my/outline-help-function-def)
 ;;; -- -- C-u C-SPC set-mark-command
 (defun my/outline-set-mark-command(arg)
   "Fix clicking buttons in Backtrace."
@@ -325,7 +354,7 @@ Executed for buffer with
     (outline-show-all)
     (my/outline-hide-others)))
 
-(advice-add 'set-mark-command :after #'my/outline-set-mark-command)
+
 ;; (advice-remove 'set-mark-command #'my/outline-set-mark-command)
 
 ;;; -- variant of fix for `outline-hide-other' (not used)
@@ -371,62 +400,157 @@ Executed for buffer with
 
 ;; (advice-add 'goto-line :around #'my/goto-line-advice)
 ;; (advice-remove 'goto-line #'my/goto-line-advice)
-;;; -- function: "outline-it"
-(defun outline-it (outline-r)
+;;; -- Main
+(defun outline-it (&optional outline-r outline-it-heading-alist)
   "Activate outline-minor mode with custom regex for header.
-Useful for navigation in one level organized files, like code
-with functions.
+Executed for current buffer.
+Provide:
+- fonts for headers
+- wrap `indent-line-function' to call `outline-toggle-children' if cursor is at header
+
 Uses two variables:
 - outline-r - define one level, should be regex to match begining of heading.
-- `outline-it-heading-alist' (optional) -  define levels, should consist
-of quoted regex strings for  usage with `string-math' use `regexp-quote'
-to escape regex characters."
-  (interactive "outline-regexp: ")
-  ;; - outline
-  (setq-local outline-regexp "")
+
+- `outline-it-heading-alist' (optional) - define levels by begining or
+substring of  header, should consist  of quoted regex strings  for usage
+with `string-math'  use `regexp-quote' to escape  regex characters.  May
+have ^ at the begining or not."
+  (interactive)
+  (print (list "outline-it"  outline-r outline-it-heading-alist))
+  ;; - clear outline-regexp if only outline-heading-alist used
+  ;; (setq-local outline-regexp "")
+
+  ;; - deactivation outline
   (outline-minor-mode -1)
-  (setq-local outline-regexp outline-r)
+
+  ;; - set outline variables
+  (cond
+
+        ;; else - Case 1) multilevel: outline-it-heading-alist (no outline-regexp)
+        ((and outline-it-heading-alist (not outline-r))
+         ;; (setq-local outline-regexp "")
+         (setq-local outline-regexp (string-join (mapcar (lambda (el) (car el)) outline-heading-alist) "\\|"))
+         (setq-local outline-heading-alist outline-it-heading-alist)
+         (print (list "case2" outline-heading-alist outline-r)))
+        ;; Case 2) one level: outline-regexp  (no outline-it-heading-alist)
+        ((and outline-r (not outline-it-heading-alist))
+         (print "case2")
+         ;; (setq-local outline-heading-alist nil)
+         (setq-local outline-regexp outline-r)
+         (setq-local outline-heading-alist
+                     (list (cons outline-regexp 1))))
+
+        ((and (buffer-file-name) (or (string-equal (file-name-nondirectory (buffer-file-name)) ".emacs")
+                                     (string-equal (file-name-nondirectory (buffer-file-name)) "init.el")))
+         (print "case3")
+         (setq-local outline-regexp ";; -- ")
+         (setq-local outline-heading-alist
+                     '((";; -- " . 1)
+                       (";; -- -- " . 2)
+                       (";; -- -- -- " . 3)
+                       (";; -- -- -- -- " . 4)
+                       (";; -- -- -- -- -- " . 5)
+                       (";; -- -- -- -- -- -- " . 6))))
+        ((and outline-r outline-it-heading-alist)
+         (setq-local outline-regexp outline-r)
+         (setq-local outline-heading-alist outline-it-heading-alist))
+
+        (t
+         (user-error "outline-it was called without argumens, it don't know what to do.")
+           ;; (setq-local outline-heading-alist
+           ;;             (list (cons outline-regexp 1))))
+        ))
+  (setq outline-default-state 'outline-show-only-headings)
+  ;; - Keys
+  (keymap-set outline-minor-mode-map "<backtab>" 'outline-cycle-buffer) ;; S-tab
+  (keymap-set outline-minor-mode-map "C-c C-e" 'my/outline-hide-others) ;; hides `elisp-eval-region-or-buffer'
+  ;; (keymap-local-set "C-c TAB" 'outline-hide-body)
+  ;; (define-key outline-minor-mode-map [S-tab] 'outline-show-all)
+  ;; (outline-hide-body)
+
+
+  ;; - activate outline-heading-alistheader leavels
+  ;; (setq outline-level #'outline-level)
+  ;; - TAB key
+
+  ;; (keymap-local-set "TAB" 'my/outline-tab) ;; rooted - wrong
+  ;;
+  ;; - Add behavior of C-u C-w to copy only headers
+  (setq-local filter-buffer-substring-function #'my/outline-copy-outline-headers)
+  ;; fix match that search in outline-heading-alist by matching whole
+  (setq-local outline-level #'my/outline-level)
+
+  ;; - activate outline
+
+  ;; (setq-local outline-regexp outline-r)
+  ;; (setq-local outline-it-heading-alist outline-r)
+
+  ;; - font lock configuration - uses outline-it-heading-alist or outline-regexp.
+  ;; (font-lock-refresh-defaults)
+  (setq-local outline-font-lock-faces (vconcat org-level-faces)) ; test: (progn (outline-back-to-heading) (outline-font-lock-face) )
+  (setq-local font-lock-defaults
+              '(outline-font-lock-keywords t nil nil backward-paragraph))
+  (setq-local outline-minor-mode-highlight t)
+
   (outline-minor-mode 1)
 
-  ;; - font lock configuration
-  (font-lock-refresh-defaults)
-  (let (reg fac
-            (org-l 1)
-        )
-    ;; 1) outline-it-heading-alist
-    (if (bound-and-true-p  outline-it-heading-alist)
-        ;; outline-it-heading-alist
-        (progn
-          ;; (setq reg (string-split outline-regexp "\\\\|"))
-          (setq reg (mapcar (lambda (x) (concat ".*" (car x) ".*")) outline-it-heading-alist))
-          (print (list "reg0" reg))
-          (dolist (reg_one reg)
-            (setq fac (nth (% (1- org-l) org-n-level-faces) org-level-faces))
-            (setq org-l (+ org-l 1))
-            (print (list "reg1" reg_one fac))
-            (font-lock-add-keywords
-             nil
-             ;; (list (cons reg_one (quote fac)))
-             (list (list reg_one #'quote fac))
-             ))
-          ;; (setq reg (string-join reg "\\|"))
-          )
-      ;; 2) else use - outline-regexp
-      (setq reg (string-split outline-regexp "\\\\|"))
-      (setq reg (mapcar (lambda (x) (concat x ".*")) reg))
-      (setq reg (string-join reg "\\|"))
-      (print (list "reg2" reg))
-      (font-lock-add-keywords
-       nil
-       (list (cons reg (quote 'org-level-1)))))
-    (progn (font-lock-mode -1)
-           (font-lock-mode 1))
-    ))
+  ;; hide headers according to `outline-default-state' variable
+  (outline-apply-default-state)
 
+  ;; - TAB key configuration to show entry
+  (unless outline-it--indent-line-function-original
+    (setq-local outline-it--indent-line-function-original indent-line-function) ; save
+    (setq-local indent-line-function #'my/outline-tab))
+   ; used by indent-for-tab-step-5-indent-line called by TAB key indent-for-tab-command
+
+  ;; (when (boundp (intern "indent-for-tab-steps"))
+  ;;   (unless (memq (intern "indent-for-tab-steps")
+  ;;   (append indent-for-tab-steps (outline-toggle-children)
+
+
+  ;; (let (reg fac
+  ;;           (org-l 1)
+  ;;       )
+    ;; 1) outline-it-heading-alist
+  ;; (if (bound-and-true-p  outline-it-heading-alist)
+  ;;     ;; outline-it-heading-alist
+  ;;     (progn
+  ;;       ;; (setq reg (string-split outline-regexp "\\\\|"))
+  ;;       (setq reg (mapcar (lambda (x)
+  ;;                           (concat
+  ;;                            (if (string-prefix-p "^" (car x)) "" ".*")
+  ;;                            ".*" (car x) ".*")) outline-it-heading-alist))
+  ;;       (print (list "reg0" reg))
+  ;;       (dolist (reg_one reg)
+  ;;         (setq fac (nth (% (1- org-l) org-n-level-faces) org-level-faces))
+  ;;         (setq org-l (+ org-l 1))
+  ;;         (print (list "reg1" reg_one fac))
+  ;;         (font-lock-add-keywords
+  ;;          nil
+  ;;          ;; (list (cons reg_one (quote fac)))
+  ;;          (list (list reg_one #'quote fac))
+  ;;          ))
+  ;;       ;; (setq reg (string-join reg "\\|"))
+  ;;       )
+  ;;     ;; 2) else use - outline-regexp
+  ;;     (setq reg (string-split outline-regexp "\\\\|"))
+  ;;     (setq reg (mapcar (lambda (x) (concat x ".*")) reg))
+  ;;     (setq reg (string-join reg "\\|"))
+  ;;     (print (list "reg2" reg))
+  ;;     (font-lock-add-keywords
+  ;;      nil
+  ;;      (list (cons reg (quote 'org-level-1)))))
+  ;; (progn (font-lock-mode -1)
+  ;;        (font-lock-mode 1))
+  )
+
+;;; -- implementations
 (defun outline-it-python ()
   (interactive)
-  (setq-local outline-it-heading-alist '(("class" . 1) ("def" . 2)))
-  (outline-it "^class\\|.* def "))
+  ;; (setq-local outline-it-heading-alist '(("class" . 1) ("def" . 2)))
+  (outline-it "^class\\|.* def "
+              '(("^class" . 1) (".*def " . 2))
+              ))
 
 
 (defun outline-it-githubactionlog ()
@@ -434,10 +558,22 @@ to escape regex characters."
 where is goups with substring ##[group].
 To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
   (interactive)
-  (setq-local outline-it-heading-alist '(("##\\[group]" . 1) ("⸺ " . 2)))
-  (outline-it ".*##\\[group]\\|.*⸺ "))
+  (outline-it "^# -- \\|.*##\\[group]\\|.*⸺ "
+              '(("^# -- " . 1) ("##\\[group]" . 2) ("⸺ " . 3)))
+  ;; (outline-default-state
+              )
+
+(defun outline-it-bash ()
+  "For Github Action Melpazoid log.
+where is goups with substring ##[group].
+To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
+  (interactive)
+  (outline-it "^# -- "
+              '(("^# -- " . 1))))
 
 
+;;; ? org bug ?
+;; (advice-remove 'outline-back-to-heading 'fix-for-org-fold)
 
 ;;; provide
 (provide 'outline-it)

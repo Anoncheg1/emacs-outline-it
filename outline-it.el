@@ -46,10 +46,10 @@
 (require 'outline)
 (require 'org)
 
-(setq outline-font-lock-faces (vconcat org-level-faces)) ; test: (progn (outline-back-to-heading) (outline-font-lock-face) )
-(setq-local font-lock-defaults
-              '(outline-font-lock-keywords t nil nil backward-paragraph))
-(setq outline-minor-mode-highlight t)
+;; (setq outline-font-lock-faces (vconcat org-level-faces)) ; test: (progn (outline-back-to-heading) (outline-font-lock-face) )
+;; (setq-local font-lock-defaults
+;;               '(outline-font-lock-keywords t nil nil backward-paragraph))
+;; (setq outline-minor-mode-highlight t)
 ;;; -- TAB key - indent.el configuration
 (defvar outline-it--indent-line-function-original nil)
 
@@ -487,10 +487,11 @@ have ^ at the begining or not."
 
   ;; - font lock configuration - uses outline-it-heading-alist or outline-regexp.
   ;; (font-lock-refresh-defaults)
-  (setq-local outline-font-lock-faces (vconcat org-level-faces)) ; test: (progn (outline-back-to-heading) (outline-font-lock-face) )
-  (setq-local font-lock-defaults
-              '(outline-font-lock-keywords t nil nil backward-paragraph))
-  (setq-local outline-minor-mode-highlight t)
+  ;; (setq-local outline-font-lock-faces (vconcat org-level-faces)) ; test: (progn (outline-back-to-heading) (outline-font-lock-face) )
+  ;; (font-lock-add-keywords nil outline-font-lock-keywords)
+  ;; (setq-local font-lock-defaults
+  ;;             '(outline-font-lock-keywords t nil nil backward-paragraph))
+  (setq-local outline-minor-mode-highlight t) ; fontify in fundamental and text mode only
 
   (outline-minor-mode 1)
 

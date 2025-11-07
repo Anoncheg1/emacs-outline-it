@@ -401,7 +401,7 @@ For `outline-minor-mode we set variables:
 ;; (advice-add 'goto-line :around #'my/goto-line-advice)
 ;; (advice-remove 'goto-line #'my/goto-line-advice)
 ;;; -- Main
-(defun outline-it (&optional outline-r outline-it-heading-alist)
+(defun outline-it (&optional outline-r outline-it-heading-alist force-fontify)
   "Activate outline-minor mode with custom regex for header.
 Executed for current buffer.
 Provide:
@@ -409,12 +409,14 @@ Provide:
 - wrap `indent-line-function' to call `outline-toggle-children' if cursor is at header
 
 Uses two variables:
-- outline-r - define one level, should be regex to match begining of heading.
+- OUTLINE-R - define one level, should be regex to match begining of heading.
 
-- `outline-it-heading-alist' (optional) - define levels by begining or
+- OUTLINE-IT-HEADING-ALIST (optional) - define levels by begining or
 substring of  header, should consist  of quoted regex strings  for usage
 with `string-math'  use `regexp-quote' to escape  regex characters.  May
-have ^ at the begining or not."
+have ^ at the begining or not.
+if FORCE-FINTIFY is non-nil - outline fontification for modes with own
+font-lock overrided with outline mode fonts for `outline-regexp'."
   (interactive)
   (print (list "outline-it"  outline-r outline-it-heading-alist))
   ;; - clear outline-regexp if only outline-heading-alist used
@@ -494,6 +496,10 @@ have ^ at the begining or not."
   (setq-local outline-minor-mode-highlight t) ; fontify in fundamental and text mode only
 
   (outline-minor-mode 1)
+  (when force-fontify
+    (outline-it-minor-mode-highlight-buffer)
+    (add-hook 'revert-buffer-restore-functions
+              #'outline-revert-buffer-rehighlight nil t))
 
   ;; hide headers according to `outline-default-state' variable
   (outline-apply-default-state)
@@ -545,6 +551,68 @@ have ^ at the begining or not."
   ;;        (font-lock-mode 1))
   )
 
+;; (defun outline-minor-mode-highlight-buffer ()
+;;   ;; Fallback to overlays when font-lock is unsupported.
+;;   (save-excursion
+;;     (goto-char (point-min))
+;;     (let ((regexp (unless outline-search-function
+;;                     (concat "^\\(?:" outline-regexp "\\).*$"))))
+;;       (while (if outline-search-function
+;;                  (funcall outline-search-function)
+;;                (re-search-forward regexp nil t))
+
+;;         (let ((overlay (make-overlay (match-beginning 0) (match-end 0))))
+
+;;           (overlay-put overlay 'outline-highlight t)
+;;           ;; >>> Set priority high so it overrides font-lock <<<
+;;           ;; (overlay-put overlay 'priority 1)
+;;           ;; (overlay-put overlay 'face (outline-font-lock-face))
+;;           ;; >>> Optionally, nuke underlying text properties <<<
+
+;;           ;; FIXME: Is it possible to override all underlying face attributes?
+;;           ;; (when (or (memq outline-minor-mode-highlight '(append override))
+;;           ;;           (and (eq outline-minor-mode-highlight t)
+;;           ;;                (not (get-text-property (match-beginning 0) 'face))))
+;;           ;;   (overlay-put overlay 'face (outline-font-lock-face)))
+;;           (remove-text-properties (match-beginning 0) (match-end 0) '(face nil))
+;;           )
+;;         (goto-char (match-end 0))))))
+
+(defun outline-it-minor-mode-highlight-buffer ()
+  "Highlight outline headers using overlays, with priority and explicit face."
+  (save-excursion
+    (goto-char (point-min))
+    (let ((regexp (unless outline-search-function
+                    (concat "^\\(?:" outline-regexp "\\).*$"))))
+      (while (if outline-search-function
+                 (funcall outline-search-function)
+               (re-search-forward regexp nil t))
+        (let ((overlay (make-overlay (match-beginning 0) (match-end 0))))
+          (overlay-put overlay 'outline-highlight t)
+          ;; >>> Set priority high so it overrides font-lock <<<
+          (overlay-put overlay 'priority 100)
+          ;; >>> Optionally, force a non-inherited face <<
+          ;; (overlay-put overlay 'face
+          ;;              (list :inherit nil
+          ;;                    :background "yellow"
+          ;;                    :foreground "black"
+          ;;                    :weight 'bold))
+          ;; If you want to use a face defined elsewhere:
+          (overlay-put overlay 'face (outline-font-lock-face))
+          ;; (when (or (memq outline-minor-mode-highlight '(append override))
+          ;;           (and (eq outline-minor-mode-highlight t)
+          ;;                (not (get-text-property (match-beginning 0) 'face))))
+          ;;   (overlay-put overlay 'face (outline-font-lock-face)))
+          ;; >>> Optionally, nuke underlying text properties <<<
+          ;; (remove-text-properties (match-beginning 0) (match-end 0) '(face nil))
+          )
+        ;; (goto-char (match-end 0))
+        )
+      ;; No need for (goto-char ...) after (re-search-forward)
+      )))
+
+;; (advice-remove 'outline-minor-mode-highlight-buffer #'outline-it-minor-mode-highlight-buffer)
+
 ;;; -- implementations
 (defun outline-it-python ()
   (interactive)
@@ -559,9 +627,10 @@ have ^ at the begining or not."
 where is goups with substring ##[group].
 To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
   (interactive)
+  (conf-mode)
   (outline-it "^# -- \\|.*##\\[group]\\|.*⸺ "
               '(("^# -- " . 1) ("##\\[group]" . 2) ("⸺ " . 3)))
-  ;; (outline-default-state
+              t ; force-fintify
               )
 
 (defun outline-it-bash ()

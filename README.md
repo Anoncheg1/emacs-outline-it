@@ -12,7 +12,7 @@
 ```lisp
 (add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
 (require 'outline-it)
-(add-hook 'outline-minor-mode-hook 'my/outline-minor-mode-hook) ; optional, for .emacs
+(add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook) ; optional, for .emacs
 ```
 
 # Usage - by function
@@ -42,7 +42,7 @@ For Elisp files:
      (outline-regexp . "^;;; ")
      (eval . (progn (keymap-local-set "C-c k" #'outline-previous-heading)
                     (keymap-local-set "C-c n" #'outline-next-heading)
-                    (keymap-local-set "C-c C-e" #'my/outline-hide-others)
+                    (keymap-local-set "C-c C-e" #'outline-it-hide-others)
                     (keymap-local-set "<backtab>" #'outline-cycle-buffer)
                     (keymap-local-set "C-<tab>" #'outline-toggle-children)
                     (outline-hide-body)
@@ -57,7 +57,7 @@ For Bash files:
      (outline-regexp . "^# -- ")
      (eval . (progn (keymap-local-set "C-c k" #'outline-previous-heading)
                     (keymap-local-set "C-c n" #'outline-next-heading)
-                    (keymap-local-set "C-c C-e" #'my/outline-hide-others)
+                    (keymap-local-set "C-c C-e" #'outline-it-hide-others)
                     (keymap-local-set "<backtab>" #'outline-cycle-buffer)
                     (keymap-local-set "C-<tab>" #'outline-toggle-children)
                     (outline-hide-body) ;; or (outline-cycle-buffer 5) ;; narrow by building levels by 5 first characters

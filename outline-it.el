@@ -33,13 +33,13 @@
 ;; Configuration:
 ;; (add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
 ;; (require 'outline-it)
-;; (add-hook 'outline-minor-mode-hook 'my/outline-minor-mode-hook) ; optional, for .emacs
+;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook) ; optional, for .emacs
 
 ;;
 ;; M-x outline-it-githubactionlog
 ;; M-x outline-it-python
 ;;
-;; Recommend to bind: (keymap-local-set "C-c C-e" #'my/outline-hide-others)
+;; Recommend to bind: (keymap-local-set "C-c C-e" #'outline-it-hide-others)
 ;;
 ;;; Code:
 ;;; -- Code
@@ -71,7 +71,7 @@ Return 'noindent if success."
 
 ;;; -- minor-mode-hook - for isearch and TAB key
 
-(defun my/outline-header-search ()
+(defun outline-it--header-search ()
   "We use part of outline-regexp string to isearch in headers."
   (if isearch-regexp
       (progn
@@ -84,32 +84,32 @@ Return 'noindent if success."
            string (mapconcat 'isearch-text-char-description string ""))))))
 
 
-(defun my/outline-minor-mode-hook ()
+(defun outline-it-outline-minor-mode-hook ()
   "Used for show/hide outline by indent-for-tab-command.
 `outline-regexp' variable used.
 Also configure isearch for C-M-s."
   (if outline-minor-mode
     (progn
       ;; - set
-      (print "my/outline-minor-mode-hook1")
-      (add-hook 'isearch-mode-hook 'my/outline-header-search nil t)
+      (print "outline-it-outline-minor-mode-hook1")
+      (add-hook 'isearch-mode-hook 'outline-it--header-search nil t)
 
       (unless outline-it--indent-line-function-original
         (setq-local outline-it--indent-line-function-original indent-line-function) ; save
         (setq-local indent-line-function #'outline-it-toggle)))
 
     ;; else - restore
-    (remove-hook 'isearch-mode-hook 'my/outline-header-search t)
+    (remove-hook 'isearch-mode-hook 'outline-it--header-search t)
     (when outline-it--indent-line-function-original
-      (print "my/outline-minor-mode-hook2")
+      (print "outline-it-outline-minor-mode-hook2")
         (setq-local indent-line-function outline-it--indent-line-function-original)
         (setq-local outline-it--indent-line-function-original nil))))
 
-;; (add-hook 'outline-minor-mode-hook 'my/outline-minor-mode-hook)
-;; (remove-hook 'outline-minor-mode-hook 'my/outline-mode-hook1)
+;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook)
+;; (remove-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook)
 
 ;;; -- add C-u C-w behavior to copy only headers
-(defun my/outline-copy-outline-headers (beg end &optional delete)
+(defun outline-it-copy-outline-headers (beg end &optional delete)
   "Copy outline headers between BEG and END that match `outline-regexp`.
 Also copies lines before the first top-level outline.
 If universal argument is set, only copy headers and pre-outline content.
@@ -138,43 +138,39 @@ Activated in outline-mode init hook."
 ;;; -- outline-level - function, fix, that match full line from outline-heading-alist by default
 ;; (defun my/outline-string-prefix-p ()
 ;; (string-match REGEXP STRING
-(defun my/outline-level ()
+(defun outline-it--outline-level ()
   "We add `string-match' for assoc as TESTFN to find level.
   Depends on `outline-regexp'."
   (let ((ma (substring-no-properties (match-string 0))))
-  ;; (print outline-heading-alist)
-  ;; (print ma)
-  ;; (print (assoc ma outline-heading-alist 'string-match))
-  ;; (outline-back-to-heading)
-  (or (cdr (assoc ma outline-heading-alist 'string-match))
-      (- (match-end 0) (match-beginning 0)))))
+    (or (cdr (assoc ma outline-heading-alist 'string-match))
+        (- (match-end 0) (match-beginning 0)))))
 
-(defun my/outline-level2 ()
-  "Return the depth to which a statement is nested in the outline.
-Point must be at the beginning of a header line.
-This is actually either the level specified in `outline-heading-alist'
-or else the number of characters matched by `outline-regexp'."
-  (or (cdr (assoc (match-string 0) outline-heading-alist))
-      (- (match-end 0) (match-beginning 0))))
+;; (defun my/outline-level2 ()
+;;   "Return the depth to which a statement is nested in the outline.
+;; Point must be at the beginning of a header line.
+;; This is actually either the level specified in `outline-heading-alist'
+;; or else the number of characters matched by `outline-regexp'."
+;;   (or (cdr (assoc (match-string 0) outline-heading-alist))
+;;       (- (match-end 0) (match-beginning 0))))
 
 ;; - set in buffer by
-   ;; (setq-local outline-level #'my/outline-level)
+   ;; (setq-local outline-level #'outline-it--outline-level)
 ;; - To test:
    ;; (progn (outline-back-to-heading t)
    ;;        (funcall outline-level))
 
 ;;; -- keys
 
-(defun my/outline-hide-others ()
+(defun outline-it-hide-others ()
   "Hide other headers and don't hide headers and text in opened."
   (interactive)
-  (print "start my/outline-hide-other")
+  (print "outline-it-hide-others")
   (save-excursion
     (outline-hide-sublevels 7) ;; hide all
     (outline-show-children) ;; show headers, not shure how and wehere,
     (outline-back-to-heading t) ;; to header in depths
     (outline-show-entry) ;; show local text
-    (print "my/outline-hide-other1")
+    (print "outline-it-hide-others1")
     (condition-case nil
         (progn
           (outline-up-heading 1 t) ;; go upper - signal warning
@@ -183,7 +179,7 @@ or else the number of characters matched by `outline-regexp'."
           (while (> (progn ;; (outline-back-to-heading t)
                       (funcall outline-level))
                     1) ;; while not at first header
-            (print (list "my/outline-hide-other3" (progn (outline-back-to-heading t)
+            (print (list "outline-it-hide-others3" (progn (outline-back-to-heading t)
                                                          (funcall outline-level))
                          (point)))
             (outline-show-entry)
@@ -191,11 +187,8 @@ or else the number of characters matched by `outline-regexp'."
 
             (condition-case nil
                 (outline-up-heading 1 t) ;; go upper  - signal warning
-              (error nil)
-              )
-
-            ))
-            (error nil))))
+              (error nil))))
+      (error nil))))
 
 
 
@@ -209,6 +202,13 @@ or else the number of characters matched by `outline-regexp'."
     (outline-hide-body)
     (outline-show-entry)))
 
+;;; -- -- C-u C-SPC set-mark-command
+(defun outline-it--set-mark-command(arg)
+  "Fix clicking buttons in Backtrace."
+  (when (and (bound-and-true-p outline-minor-mode)
+             arg)
+    (outline-show-all)
+    (outline-it-hide-others)))
 
 ;;; -- -- advices activation
 ;; dont depend on outline-minor-mode
@@ -217,16 +217,9 @@ or else the number of characters matched by `outline-regexp'."
 (advice-add 'goto-line :around #'outline-it--fix-xref-outline)
 (advice-add 'compile-goto-error :around #'outline-it--fix-xref-outline)
 (advice-add 'help-function-def--button-function :around #'outline-it--fix-xref-outline)
-(advice-add 'set-mark-command :after #'my/outline-set-mark-command)
+(advice-add 'set-mark-command :after #'outline-it--set-mark-command)
 ;; depend on outline-minor-mode
 ;; (advice-add 'help-function-def--button-function :after #'my/outline-help-function-def)
-;;; -- -- C-u C-SPC set-mark-command
-(defun my/outline-set-mark-command(arg)
-  "Fix clicking buttons in Backtrace."
-  (when (and (bound-and-true-p outline-minor-mode)
-             arg)
-    (outline-show-all)
-    (my/outline-hide-others)))
 
 
 ;;; -- Main
@@ -292,7 +285,7 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
   (setq outline-default-state 'outline-show-only-headings)
   ;; - Keys
   (keymap-set outline-minor-mode-map "<backtab>" 'outline-cycle-buffer) ;; S-tab
-  (keymap-set outline-minor-mode-map "C-c C-e" 'my/outline-hide-others) ;; hides `elisp-eval-region-or-buffer'
+  (keymap-set outline-minor-mode-map "C-c C-e" 'outline-it-hide-others) ;; hides `elisp-eval-region-or-buffer'
   ;; (keymap-local-set "C-c TAB" 'outline-hide-body)
   ;; (define-key outline-minor-mode-map [S-tab] 'outline-show-all)
   ;; (outline-hide-body)
@@ -305,9 +298,9 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
   ;; (keymap-local-set "TAB" 'outline-it-toggle) ;; rooted - wrong
   ;;
   ;; - Add behavior of C-u C-w to copy only headers
-  (setq-local filter-buffer-substring-function #'my/outline-copy-outline-headers)
+  (setq-local filter-buffer-substring-function #'outline-it-copy-outline-headers)
   ;; fix match that search in outline-heading-alist by matching whole
-  (setq-local outline-level #'my/outline-level)
+  (setq-local outline-level #'outline-it--outline-level)
 
   ;; - activate outline
 

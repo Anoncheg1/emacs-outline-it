@@ -3,9 +3,9 @@
 # emacs-outline-it
 
 # Features
-- fontification like in Org
-- more simplier usage by specifying regex for headers
-- fixed for Outline mode when jumping such as xref and goto (advices activates at loading
+- fontification like in Org for any mode.
+- fixes for Outline mode for jumping such as xref and goto (advices activates at loading)
+- configure TAB key It by default bound to `indent-for-tab-command' we use `indent-line-function`.
 
 # Configuration
 

@@ -91,6 +91,9 @@ Function outline-back-to-heading -> outline-level ( used by outline-hide-subleve
 - outline-back-to-heading use var outline-regexp
 - outline-level uses var alist
 
+# Known bugs
+```(revert-buffer nil t t)``` not working.
+
 # Other packages for same purpose from other authors:
 - 2w https://github.com/jdtsmith/outli (font-lock)
 - 7y https://github.com/tj64/outline-magic

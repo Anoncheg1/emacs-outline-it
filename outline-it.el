@@ -195,7 +195,7 @@ Activated in outline-mode init hook."
 
 ;;; -- fixes for other modes
 ;;; -- -- C-, xref jump
-(defun outline-it--fix-xref-outline (&rest args)
+(defun outline-it--jumping-to-invisible-fix (&rest args)
   "Fix bug when we jump C-, to place hidden header."
   ;; (apply orig-fun args)
   (when (eq (get-char-property (point) 'invisible) 'outline)
@@ -212,12 +212,12 @@ Activated in outline-mode init hook."
 
 ;;; -- -- advices activation
 ;; dont depend on outline-minor-mode
-(advice-add 'xref-find-definitions :after #'outline-it--fix-xref-outline)
-(advice-add 'xref-go-back :after #'outline-it--fix-xref-outline)
-(advice-add 'goto-line :after #'outline-it--fix-xref-outline)
-(advice-add 'compile-goto-error :after #'outline-it--fix-xref-outline)
-(advice-add 'help-function-def--button-function :after #'outline-it--fix-xref-outline)
-(advice-add 'checkdoc-next-error :after #'outline-it--fix-xref-outline)
+(advice-add 'xref-find-definitions :after #'outline-it--jumping-to-invisible-fix)
+(advice-add 'xref-go-back :after #'outline-it--jumping-to-invisible-fix)
+(advice-add 'goto-line :after #'outline-it--jumping-to-invisible-fix)
+(advice-add 'compile-goto-error :after #'outline-it--jumping-to-invisible-fix)
+(advice-add 'help-function-def--button-function :after #'outline-it--jumping-to-invisible-fix)
+(advice-add 'checkdoc-next-error :after #'outline-it--jumping-to-invisible-fix)
 (advice-add 'set-mark-command :after #'outline-it--set-mark-command)
 
 ;; depend on outline-minor-mode

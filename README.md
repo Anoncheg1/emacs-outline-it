@@ -76,7 +76,7 @@ We replace `outline-level` function because it match outline-heading-alist incor
 
 For searching in headers we add hook to `isearch-mode-hook' that add template to `C-M-s` `isearch-forward-regexp` command by `outline-regexp' variable. We do this globally without calling `outline-it' function.
 
-# Screen
+# Screenshot - conf-mode with with forced fontification.
 
 ![outline-it](https://raw.githubusercontent.com/Anoncheg1/public-share/main/outline-it.png)
 

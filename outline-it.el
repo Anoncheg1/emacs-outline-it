@@ -1,4 +1,4 @@
-;;; outline-it.el --- Outline-based management for new types of documents -*- lexical-binding: t; -*-
+;;; outline-it.el --- Outline mode enhanced and prepared for usage with anything -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2025 github.com/Anoncheg1,codeberg.org/Anoncheg
 ;;

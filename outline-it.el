@@ -33,8 +33,10 @@
 ;; Configuration:
 ;; (add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
 ;; (require 'outline-it)
+;; ;; configure TAB key and isearch C-M-s key if outline-it or outline-minor-mode activated
 ;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook) ; optional, for .emacs
-
+;; ;; or without outline-it and outline-minor-mode for any major mode:
+;; (add-hook 'emacs-lisp-mode-hook 'outline-it-any-mode-hook-function)
 ;;
 ;; M-x outline-it-githubactionlog
 ;; M-x outline-it-python
@@ -84,7 +86,7 @@ Return 'noindent if success."
            string (mapconcat 'isearch-text-char-description string ""))))))
 
 
-(defun outline-it-outline-minor-mode-hook ()
+(defun outline-it-outline-minor-mode-hook-function ()
   "Used for show/hide outline by indent-for-tab-command.
 `outline-regexp' variable used.
 Also configure isearch for C-M-s."
@@ -105,8 +107,13 @@ Also configure isearch for C-M-s."
         (setq-local indent-line-function outline-it--indent-line-function-original)
         (setq-local outline-it--indent-line-function-original nil))))
 
-;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook)
-;; (remove-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook)
+(defun outline-it-any-mode-hook-function ()
+  "isearch and TAB key configuration without usage of minor mode."
+  (let ((outline-minor-mode t)) (outline-it-outline-minor-mode-hook-function)))
+
+;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook-function)
+;; (remove-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook-function)
+;; (add-hook 'emacs-lisp-mode-hook 'outline-it-any-mode-hook-function)
 
 ;;; -- add C-u C-w behavior to copy only headers
 (defun outline-it-copy-outline-headers (beg end &optional delete)
@@ -191,14 +198,24 @@ Activated in outline-mode init hook."
       (error nil))))
 
 
-
-
 ;;; -- fixes for other modes
 ;;; -- -- C-, xref jump
 (defun outline-it--jumping-to-invisible-fix (&rest args)
   "Fix bug when we jump C-, to place hidden header."
   ;; (apply orig-fun args)
-  (when (eq (get-char-property (point) 'invisible) 'outline)
+  (when (or
+         ;; in hidder neader
+         (eq (get-char-property (point) 'invisible) 'outline)
+         ;; or at header and next line is hidden
+         (and (save-match-data
+                (string-match outline-regexp
+                              (buffer-substring (line-beginning-position)
+                                                (line-end-position))))
+              (condition-case nil
+                  (save-excursion
+                    (forward-line)
+                    (eq (get-char-property (point) 'invisible) 'outline))
+                    (error nil))))
     (outline-hide-body)
     (outline-show-entry)))
 

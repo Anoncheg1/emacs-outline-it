@@ -63,7 +63,7 @@
 Wrap original `indent-line-function' explicitly.
 Used for TAB key.
 Compare full line with `outline-regexp' variable.
-Return 'noindent if success.
+Return noindent symbol if success.
 Also called from `indent-according-to-mode'"
   (interactive)
   (if (eq 0 (string-match outline-regexp
@@ -126,7 +126,7 @@ Also configure isearch for C-M-s."
 Also copies lines before the first top-level outline.
 If universal argument is set, only copy headers and pre-outline content.
 Otherwise, copy all content using `buffer-substring--filter`.
-Activated in outline-mode init hook.
+Activated in `outline-mode' init hook.
 If DELETE is non-nil, it should delete the text between BEG and END from
 the buffer, as stated in `filter-buffer-substring-function', it is TODO."
   (if current-prefix-arg
@@ -154,7 +154,7 @@ the buffer, as stated in `filter-buffer-substring-function', it is TODO."
 ;; (string-match REGEXP STRING
 (defun outline-it--outline-level ()
   "We add `string-match' for assoc as TESTFN to find level.
-  Depends on `outline-regexp'."
+Depends on `outline-regexp'."
   (let ((ma (substring-no-properties (match-string 0))))
     (or (cdr (assoc ma outline-heading-alist 'string-match))
         (- (match-end 0) (match-beginning 0)))))
@@ -211,7 +211,7 @@ the buffer, as stated in `filter-buffer-substring-function', it is TODO."
   "Fix bug when we jump C-, to place hidden header."
   (ignore _args)
   ;; (apply orig-fun args)
-  ;; (error "asd")
+  ;; (error "Asd")
   (when (or
          ;; - at hidder
          ;; if line is empty it have no properties, we handle this case
@@ -234,18 +234,18 @@ the buffer, as stated in `filter-buffer-substring-function', it is TODO."
     (outline-hide-body)
     (outline-show-entry)))
 
-;;; -- -- C-u C-SPC set-mark-command
-(defun outline-it--set-mark-command(arg)
-  "Fix clicking buttons in Backtrace."
-  (when (and (bound-and-true-p outline-minor-mode)
-             arg)
-    (outline-show-all)
-    (outline-it-hide-others)))
+;;; -- -- C-u C-SPC set-mark-command (old, not used)
+;; (defun outline-it--set-mark-command(arg)
+;;   "Fix clicking buttons in Backtrace."
+;;   (when (and (bound-and-true-p outline-minor-mode)
+;;              arg)
+;;     (outline-show-all)
+;;     (outline-it-hide-others)))
 
 ;;; -- -- advices activation
 ;;;###autoload
 (defun outline-it-advices-activation ()
-  "Dont depend on outline-minor-mode."
+  "Dont depend on `outline-minor-mode'."
   (advice-add 'xref-find-definitions :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'xref-go-back :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'goto-line :after #'outline-it--jumping-to-invisible-fix)
@@ -268,16 +268,18 @@ the buffer, as stated in `filter-buffer-substring-function', it is TODO."
 Executed for current buffer.
 Provide:
 - fonts for headers
-- wrap `indent-line-function' to call `outline-toggle-children' if cursor is at header
+- wrap `indent-line-function' to call `outline-toggle-children' if
+  cursor is at header
 
 Uses two variables:
-- OUTLINE-R - define one level, should be regex to match begining of heading.
+- OUTLINE-R - define one level, should be regex to match begining of
+  heading.
 
 - OUTLINE-IT-HEADING-ALIST (optional) - define levels by begining or
-substring of  header, should consist  of quoted regex strings  for usage
-with `string-math'  use `regexp-quote' to escape  regex characters.  May
+substring of header, should consist of quoted regex strings for usage
+with `string-math' use `regexp-quote' to escape regex characters.  May
 have ^ at the begining or not.
-if FORCE-FINTIFY is non-nil - outline fontification for modes with own
+If FORCE-FONTIFY is non-nil - outline fontification for modes with own
 font-lock overrided with outline mode fonts for `outline-regexp'."
   (interactive)
   (print (list "outline-it"  outline-r outline-it-heading-alist))
@@ -318,7 +320,7 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
          (setq-local outline-heading-alist outline-it-heading-alist))
 
         (t
-         (user-error "outline-it was called without argumens, it don't know what to do.")
+         (user-error "outline-it was called without argumens, it don't know what to do.?")
            ;; (setq-local outline-heading-alist
            ;;             (list (cons outline-regexp 1))))
         ))
@@ -412,6 +414,7 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
 ;;; -- implementations
 ;;;###autoload
 (defun outline-it-python ()
+  "Python."
   (interactive)
   (outline-it "^class\\|.* def "
               '(("^class" . 1) (".*def " . 2))))

@@ -57,18 +57,20 @@
 
 (defun outline-it-toggle ()
   "If current position is at outline line, show or hide it.
+Wrap original `indent-line-function' explicitly.
 Used for TAB key.
 Compare full line with `outline-regexp' variable.
-Return 'noindent if success."
+Return 'noindent if success.
+Also called from `indent-according-to-mode'"
   (interactive)
-  (if (string-match outline-regexp
-                    (buffer-substring (line-beginning-position)
-                                      (line-end-position)))
+  (if (= 0 (string-match outline-regexp
+                    (buffer-substring-no-properties (line-beginning-position)
+                                      (line-end-position))))
       (progn
         (outline-toggle-children)
         'noindent ; stop TAB sequence
         )
-    ;; else - not header
+    ;; else - not header, call original
     (indent--funcall-widened outline-it--indent-line-function-original)))
 
 ;;; -- minor-mode-hook - for isearch and TAB key
@@ -235,7 +237,8 @@ Activated in outline-mode init hook."
 (advice-add 'compile-goto-error :after #'outline-it--jumping-to-invisible-fix)
 (advice-add 'help-function-def--button-function :after #'outline-it--jumping-to-invisible-fix)
 (advice-add 'checkdoc-next-error :after #'outline-it--jumping-to-invisible-fix)
-(advice-add 'set-mark-command :after #'outline-it--set-mark-command)
+(advice-add 'set-mark-command :after #'outline-it--jumping-to-invisible-fix)
+;; (advice-add 'set-mark-command :after #'outline-it--set-mark-command)
 
 ;; depend on outline-minor-mode
 ;; (advice-add 'help-function-def--button-function :after #'my/outline-help-function-def)

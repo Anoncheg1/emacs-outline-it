@@ -24,6 +24,8 @@ jobs:
           sudo apt-get install emacs-nox  && emacs --version
           git clone https://github.com/riscy/melpazoid.git ~/melpazoid
           pip install ~/melpazoid
+      - name: Run emacs
+        run: |
           emacs-nox -Q -l outline-it.el
       - name: Run
         env:

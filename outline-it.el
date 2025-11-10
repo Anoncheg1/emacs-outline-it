@@ -5,8 +5,9 @@
 ;; Author: <github.com/Anoncheg1,codeberg.org/Anoncheg>
 ;; Keywords: outlines, hypermedia, text, faces
 ;; URL: https://orgmode.org
-;; Package-Requires: ((emacs "26.1"))
-
+;; Package-Requires: ((emacs "30.1"))
+;; Version: 0.1
+;
 ;;; License
 
 ;; This file is not part of GNU Emacs.
@@ -33,6 +34,7 @@
 ;; Configuration:
 ;; (add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
 ;; (require 'outline-it)
+;; (outline-it-advices-activation)
 ;; ;; configure TAB key and isearch C-M-s key if outline-it or outline-minor-mode activated
 ;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook) ; optional, for .emacs
 ;; ;; or without outline-it and outline-minor-mode for any major mode:
@@ -55,6 +57,7 @@
 ;;; -- TAB key - indent.el configuration
 (defvar outline-it--indent-line-function-original nil)
 
+;;;###autoload
 (defun outline-it-toggle ()
   "If current position is at outline line, show or hide it.
 Wrap original `indent-line-function' explicitly.
@@ -76,7 +79,7 @@ Also called from `indent-according-to-mode'"
 ;;; -- minor-mode-hook - for isearch and TAB key
 
 (defun outline-it--header-search ()
-  "We use part of outline-regexp string to isearch in headers."
+  "We use part of `outline-regexp' string to isearch in headers."
   (if isearch-regexp
       (progn
         (setq isearch-case-fold-search 1)   ; make searches case insensitive
@@ -85,32 +88,32 @@ Also called from `indent-according-to-mode'"
         (let ((string
                (concat (car (string-split outline-regexp "\\\\|")) ".*")))
           (isearch-process-search-string
-           string (mapconcat 'isearch-text-char-description string ""))))))
+           string (mapconcat #'isearch-text-char-description string ""))))))
 
 
 (defun outline-it-outline-minor-mode-hook-function ()
-  "Used for show/hide outline by indent-for-tab-command.
+  "Used for show/hide outline by `indent-for-tab-command'.
 `outline-regexp' variable used.
 Also configure isearch for C-M-s."
   (if outline-minor-mode
     (progn
       ;; - set
       (print "outline-it-outline-minor-mode-hook1")
-      (add-hook 'isearch-mode-hook 'outline-it--header-search nil t)
+      (add-hook 'isearch-mode-hook #'outline-it--header-search nil t)
 
       (unless outline-it--indent-line-function-original
         (setq-local outline-it--indent-line-function-original indent-line-function) ; save
         (setq-local indent-line-function #'outline-it-toggle)))
 
     ;; else - restore
-    (remove-hook 'isearch-mode-hook 'outline-it--header-search t)
+    (remove-hook 'isearch-mode-hook #'outline-it--header-search t)
     (when outline-it--indent-line-function-original
       (print "outline-it-outline-minor-mode-hook2")
         (setq-local indent-line-function outline-it--indent-line-function-original)
         (setq-local outline-it--indent-line-function-original nil))))
 
 (defun outline-it-any-mode-hook-function ()
-  "isearch and TAB key configuration without usage of minor mode."
+  "Isearch and TAB key configuration without usage of minor mode."
   (let ((outline-minor-mode t)) (outline-it-outline-minor-mode-hook-function)))
 
 ;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook-function)
@@ -123,7 +126,9 @@ Also configure isearch for C-M-s."
 Also copies lines before the first top-level outline.
 If universal argument is set, only copy headers and pre-outline content.
 Otherwise, copy all content using `buffer-substring--filter`.
-Activated in outline-mode init hook."
+Activated in outline-mode init hook.
+If DELETE is non-nil, it should delete the text between BEG and END from
+the buffer, as stated in `filter-buffer-substring-function', it is TODO."
   (if current-prefix-arg
       (let* ((content (buffer-substring-no-properties beg end))
              (lines (split-string content "\n" nil))
@@ -169,7 +174,7 @@ Activated in outline-mode init hook."
    ;;        (funcall outline-level))
 
 ;;; -- keys
-
+;;;###autoload
 (defun outline-it-hide-others ()
   "Hide other headers and don't hide headers and text in opened."
   (interactive)
@@ -202,8 +207,9 @@ Activated in outline-mode init hook."
 
 ;;; -- fixes for other modes
 ;;; -- -- C-, xref jump
-(defun outline-it--jumping-to-invisible-fix (&rest args)
+(defun outline-it--jumping-to-invisible-fix (&rest _args)
   "Fix bug when we jump C-, to place hidden header."
+  (ignore _args)
   ;; (apply orig-fun args)
   ;; (error "asd")
   (when (or
@@ -237,23 +243,26 @@ Activated in outline-mode init hook."
     (outline-it-hide-others)))
 
 ;;; -- -- advices activation
-;; dont depend on outline-minor-mode
-(advice-add 'xref-find-definitions :after #'outline-it--jumping-to-invisible-fix)
-(advice-add 'xref-go-back :after #'outline-it--jumping-to-invisible-fix)
-(advice-add 'goto-line :after #'outline-it--jumping-to-invisible-fix)
-(advice-add 'compile-goto-error :after #'outline-it--jumping-to-invisible-fix)
-(advice-add 'help-function-def--button-function :after #'outline-it--jumping-to-invisible-fix)
-(advice-add 'checkdoc-next-error :after #'outline-it--jumping-to-invisible-fix)
-;; (advice-remove 'set-mark-command  #'outline-it--jumping-to-invisible-fix)
-;; - for Backtrace buffer buttons.
-(add-hook 'find-function-after-hook #'outline-it--jumping-to-invisible-fix)
-;; (advice-add 'set-mark-command :after #'outline-it--set-mark-command)
-
+;;;###autoload
+(defun outline-it-advices-activation ()
+  "Dont depend on outline-minor-mode."
+  (advice-add 'xref-find-definitions :after #'outline-it--jumping-to-invisible-fix)
+  (advice-add 'xref-go-back :after #'outline-it--jumping-to-invisible-fix)
+  (advice-add 'goto-line :after #'outline-it--jumping-to-invisible-fix)
+  (advice-add 'compile-goto-error :after #'outline-it--jumping-to-invisible-fix)
+  (advice-add 'help-function-def--button-function :after #'outline-it--jumping-to-invisible-fix)
+  (advice-add 'checkdoc-next-error :after #'outline-it--jumping-to-invisible-fix)
+  ;; (advice-remove 'set-mark-command  #'outline-it--jumping-to-invisible-fix)
+  ;; - for Backtrace buffer buttons.
+  (add-hook 'find-function-after-hook #'outline-it--jumping-to-invisible-fix)
+  ;; (advice-add 'set-mark-command :after #'outline-it--set-mark-command)
+  )
 ;; depend on outline-minor-mode
 ;; (advice-add 'help-function-def--button-function :after #'my/outline-help-function-def)
 
 
 ;;; -- Main
+;;;###autoload
 (defun outline-it (&optional outline-r outline-it-heading-alist force-fontify)
   "Activate outline-minor mode with custom regex for header.
 Executed for current buffer.
@@ -364,7 +373,6 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
   ;; (when (boundp (intern "indent-for-tab-steps"))
   ;;   (unless (memq (intern "indent-for-tab-steps")
   ;;   (append indent-for-tab-steps (outline-toggle-children)
-
   )
 
 
@@ -402,13 +410,14 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
       )))
 
 ;;; -- implementations
+;;;###autoload
 (defun outline-it-python ()
   (interactive)
   (outline-it "^class\\|.* def "
-              '(("^class" . 1) (".*def " . 2))
-              ))
+              '(("^class" . 1) (".*def " . 2))))
 
 
+;;;###autoload
 (defun outline-it-githubactionlog ()
   "For Github Action Melpazoid log.
 where is goups with substring ##[group].
@@ -420,6 +429,7 @@ To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
               t ; force-fintify
               ))
 
+;;;###autoload
 (defun outline-it-bash ()
   "For Github Action Melpazoid log.
 where is goups with substring ##[group].

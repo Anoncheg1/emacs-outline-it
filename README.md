@@ -12,6 +12,7 @@
 ```lisp
 (add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
 (require 'outline-it)
+(outline-it-advices-activation)
 ;; configure TAB key and isearch C-M-s key if outline-it or outline-minor-mode activated
 (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook-function) ; optional, for .emacs
 ;; without outline-it and outline-minor-mode per any major mode:

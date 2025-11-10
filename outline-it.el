@@ -63,7 +63,7 @@ Compare full line with `outline-regexp' variable.
 Return 'noindent if success.
 Also called from `indent-according-to-mode'"
   (interactive)
-  (if (= 0 (string-match outline-regexp
+  (if (eq 0 (string-match outline-regexp
                     (buffer-substring-no-properties (line-beginning-position)
                                       (line-end-position))))
       (progn

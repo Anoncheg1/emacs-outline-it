@@ -205,10 +205,17 @@ Activated in outline-mode init hook."
 (defun outline-it--jumping-to-invisible-fix (&rest args)
   "Fix bug when we jump C-, to place hidden header."
   ;; (apply orig-fun args)
+  ;; (error "asd")
   (when (or
-         ;; in hidder neader
-         (eq (get-char-property (point) 'invisible) 'outline)
-         ;; or at header and next line is hidden
+         ;; - at hidder
+         ;; if line is empty it have no properties, we handle this case
+         (if (string-empty-p (string-trim (buffer-substring-no-properties (line-beginning-position)
+                                                                           (line-end-position))))
+             (save-excursion (forward-line -1)
+                             (eq (get-char-property (point) 'invisible) 'outline))
+           ;; else - not empy
+           (eq (get-char-property (point) 'invisible) 'outline))
+         ;; - or at header and next line is hidden
          (and (save-match-data
                 (string-match outline-regexp
                               (buffer-substring (line-beginning-position)
@@ -237,7 +244,9 @@ Activated in outline-mode init hook."
 (advice-add 'compile-goto-error :after #'outline-it--jumping-to-invisible-fix)
 (advice-add 'help-function-def--button-function :after #'outline-it--jumping-to-invisible-fix)
 (advice-add 'checkdoc-next-error :after #'outline-it--jumping-to-invisible-fix)
-(advice-add 'set-mark-command :after #'outline-it--jumping-to-invisible-fix)
+;; (advice-remove 'set-mark-command  #'outline-it--jumping-to-invisible-fix)
+;; - for Backtrace buffer buttons.
+(add-hook 'find-function-after-hook #'outline-it--jumping-to-invisible-fix)
 ;; (advice-add 'set-mark-command :after #'outline-it--set-mark-command)
 
 ;; depend on outline-minor-mode

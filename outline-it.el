@@ -210,6 +210,7 @@ Depends on `outline-regexp'."
 (defun outline-it--jumping-to-invisible-fix (&rest _args)
   "Fix bug when we jump C-, to place hidden header."
   (ignore _args)
+  (print "outline-it--jumping-to-invisible-fix")
   ;; (apply orig-fun args)
   ;; (error "Asd")
   (when (or
@@ -231,7 +232,7 @@ Depends on `outline-regexp'."
                     (forward-line)
                     (eq (get-char-property (point) 'invisible) 'outline))
                     (error nil))))
-    (outline-hide-body)
+    ;; (outline-hide-body)
     (outline-show-entry)))
 
 ;;; -- -- C-u C-SPC set-mark-command (old, not used)
@@ -243,15 +244,30 @@ Depends on `outline-regexp'."
 ;;     (outline-it-hide-others)))
 
 ;;; -- -- advices activation
+
+(defun outline-it--forward-sexp-fix (arg &optional interactive)
+  "Open outline if we move by sexp or some function."
+  (when interactive
+    (outline-it--jumping-to-invisible-fix)))
+
 ;;;###autoload
 (defun outline-it-advices-activation ()
   "Dont depend on `outline-minor-mode'."
   (advice-add 'xref-find-definitions :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'xref-go-back :after #'outline-it--jumping-to-invisible-fix)
+  ;; C-u C-SPC
+  (advice-add 'pop-to-mark-command :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'goto-line :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'compile-goto-error :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'help-function-def--button-function :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'checkdoc-next-error :after #'outline-it--jumping-to-invisible-fix)
+  ;; dangerous
+  (advice-add 'forward-sexp :after #'outline-it--forward-sexp-fix)
+  (advice-add 'backward-sexp :after #'outline-it--forward-sexp-fix)
+
+  ;; (advice-remove 'forward-sexp-default-function #'outline-it--jumping-to-invisible-fix-advanced)
+  ;; (advice-remove 'backward-sexp #'outline-it--jumping-to-invisible-fix)
+
   ;; (advice-remove 'set-mark-command  #'outline-it--jumping-to-invisible-fix)
   ;; - for Backtrace buffer buttons.
   (add-hook 'find-function-after-hook #'outline-it--jumping-to-invisible-fix)

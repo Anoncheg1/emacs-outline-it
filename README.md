@@ -15,7 +15,8 @@
 (outline-it-advices-activation)
 ;; configure TAB key and isearch C-M-s key if outline-it or outline-minor-mode activated
 (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook-function) ; optional, for .emacs
-;; without outline-it and outline-minor-mode per any major mode:
+;; Or without outline-it and outline-minor-mode for any major mode.
+;; Variable `outline-regexp' should be set.
 (add-hook 'emacs-lisp-mode-hook 'outline-it-any-mode-hook-function)
 ```
 

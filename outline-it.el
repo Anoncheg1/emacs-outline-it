@@ -246,7 +246,9 @@ Depends on `outline-regexp'."
 ;;; -- -- advices activation
 
 (defun outline-it--forward-sexp-fix (&rest args)
-  "Open outline if we move by sexp or some function."
+  "Open outline if we move by sexp or some function.
+Optional argument ARGS we use to check that call was interactive,
+because `forward-sexp' call itself several times recursively."
   (when (and (eq (length args) 2)  (cadr args))
     ;; (print (list "outline-it--forward-sexp-fix" args))
     (outline-it--jumping-to-invisible-fix)))

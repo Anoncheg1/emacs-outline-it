@@ -39,7 +39,7 @@
 ;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook) ; optional, for .emacs
 ;; ;; Or without outline-it and outline-minor-mode for any major mode.
 ;; ;; Variable `outline-regexp' should be set.
-;; (add-hook 'emacs-lisp-mode-hook 'outline-it-any-mode-hook-function)
+;; (add-hook 'sh-mode-hook 'outline-it-any-mode-hook-function) ;; sh-mode sets '###' to `outline-regexp'
 ;;
 ;; M-x outline-it-githubactionlog
 ;; M-x outline-it-python
@@ -71,11 +71,13 @@ Also called from `indent-according-to-mode'"
                     (buffer-substring-no-properties (line-beginning-position)
                                       (line-end-position))))
       (progn
+        (print "outline-it-toggle1")
         (outline-toggle-children)
         'noindent ; stop TAB sequence
         )
     ;; else - not header, call original
-    (indent--funcall-widened outline-it--indent-line-function-original)))
+    (print (list "outline-it-toggle2" outline-it--indent-line-function-original))
+    (print (indent--funcall-widened outline-it--indent-line-function-original))))
 
 ;;; -- minor-mode-hook - for isearch and TAB key
 
@@ -340,7 +342,7 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
          (setq-local outline-heading-alist outline-it-heading-alist))
 
         (t
-         (user-error "outline-it was called without argumens, it don't know what to do.?")
+         (user-error "Arguments for outline-it function should be provided")
            ;; (setq-local outline-heading-alist
            ;;             (list (cons outline-regexp 1))))
         ))

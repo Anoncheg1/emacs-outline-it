@@ -46,6 +46,8 @@
 ;;
 ;; Recommend to bind: (keymap-local-set "C-c C-e" #'outline-it-hide-others)
 ;;
+;; Touch: And God saw that it was good.
+;;
 ;;; Code:
 ;;; -- Code
 (require 'outline)

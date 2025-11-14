@@ -1,4 +1,4 @@
-;;; outline-it.el --- Outline mode enhanced and prepared for usage with anything -*- lexical-binding: t; -*-
+;;; outline-it.el --- Outline mode is enhanced and prepared for use with anything -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2025 github.com/Anoncheg1,codeberg.org/Anoncheg
 ;;
@@ -34,16 +34,21 @@
 ;; Configuration:
 ;; (add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
 ;; (require 'outline-it)
-;; (outline-it-advices-activation)
-;; ;; configure TAB key and isearch C-M-s key if outline-it or outline-minor-mode activated
-;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook) ; optional, for .emacs
+;; (outline-it-advices-activation) ; fixes for jumping
+;; ;; configure TAB key and isearch C-M-s key if outline-it or
+;; ;;   outline-minor-mode activated
+;; ;; optional, for .emacs :
+;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook)
 ;; ;; Or without outline-it and outline-minor-mode for any major mode.
 ;; ;; Variable `outline-regexp' should be set.
-;; (add-hook 'sh-mode-hook 'outline-it-any-mode-hook-function) ;; sh-mode sets '###' to `outline-regexp'
+;; ;; sh-mode sets '###' to `outline-regexp'
+;; (add-hook 'sh-mode-hook 'outline-it-any-mode-hook-function) ; optional
+;;
 ;;
 ;; M-x outline-it-githubactionlog
 ;; M-x outline-it-python
 ;;
+;; ;; in Elisp shadows `elisp-eval-region-or-buffer'
 ;; Recommend to bind: (keymap-local-set "C-c C-e" #'outline-it-hide-others)
 ;;
 ;; Touch: And God saw that it was good.
@@ -53,10 +58,6 @@
 (require 'outline)
 (require 'org)
 
-;; (setq outline-font-lock-faces (vconcat org-level-faces)) ; test: (progn (outline-back-to-heading) (outline-font-lock-face) )
-;; (setq-local font-lock-defaults
-;;               '(outline-font-lock-keywords t nil nil backward-paragraph))
-;; (setq outline-minor-mode-highlight t)
 ;;; -- TAB key - indent.el configuration
 (defvar outline-it--indent-line-function-original nil)
 
@@ -121,10 +122,6 @@ Also configure isearch for C-M-s."
   "Isearch and TAB key configuration without usage of minor mode."
   (let ((outline-minor-mode t)) (outline-it-outline-minor-mode-hook-function)))
 
-;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook-function)
-;; (remove-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook-function)
-;; (add-hook 'emacs-lisp-mode-hook 'outline-it-any-mode-hook-function)
-
 ;;; -- add C-u C-w behavior to copy only headers
 (defun outline-it-copy-outline-headers (beg end &optional delete)
   "Copy outline headers between BEG and END that match `outline-regexp`.
@@ -155,28 +152,12 @@ the buffer, as stated in `filter-buffer-substring-function', it is TODO."
     ;; else - no prefix
     (buffer-substring--filter beg end delete)))
 ;;; -- outline-level - function, fix, that match full line from outline-heading-alist by default
-;; (defun my/outline-string-prefix-p ()
-;; (string-match REGEXP STRING
 (defun outline-it--outline-level ()
   "We add `string-match' for assoc as TESTFN to find level.
 Depends on `outline-regexp'."
   (let ((ma (substring-no-properties (match-string 0))))
     (or (cdr (assoc ma outline-heading-alist 'string-match))
         (- (match-end 0) (match-beginning 0)))))
-
-;; (defun my/outline-level2 ()
-;;   "Return the depth to which a statement is nested in the outline.
-;; Point must be at the beginning of a header line.
-;; This is actually either the level specified in `outline-heading-alist'
-;; or else the number of characters matched by `outline-regexp'."
-;;   (or (cdr (assoc (match-string 0) outline-heading-alist))
-;;       (- (match-end 0) (match-beginning 0))))
-
-;; - set in buffer by
-   ;; (setq-local outline-level #'outline-it--outline-level)
-;; - To test:
-   ;; (progn (outline-back-to-heading t)
-   ;;        (funcall outline-level))
 
 ;;; -- keys
 ;;;###autoload
@@ -240,14 +221,6 @@ Depends on `outline-regexp'."
     ;; (outline-hide-body)
     (outline-show-entry)))
 
-;;; -- -- C-u C-SPC set-mark-command (old, not used)
-;; (defun outline-it--set-mark-command(arg)
-;;   "Fix clicking buttons in Backtrace."
-;;   (when (and (bound-and-true-p outline-minor-mode)
-;;              arg)
-;;     (outline-show-all)
-;;     (outline-it-hide-others)))
-
 ;;; -- -- advices activation
 
 (defun outline-it--forward-sexp-fix (&rest args)
@@ -281,9 +254,6 @@ because `forward-sexp' call itself several times recursively."
   (add-hook 'find-function-after-hook #'outline-it--jumping-to-invisible-fix)
   ;; (advice-add 'set-mark-command :after #'outline-it--set-mark-command)
   )
-;; depend on outline-minor-mode
-;; (advice-add 'help-function-def--button-function :after #'my/outline-help-function-def)
-
 
 ;;; -- Main
 ;;;###autoload
@@ -375,7 +345,8 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
 
   ;; - font lock configuration - uses outline-it-heading-alist or outline-regexp.
   ;; (font-lock-refresh-defaults)
-  ;; (setq-local outline-font-lock-faces (vconcat org-level-faces)) ; test: (progn (outline-back-to-heading) (outline-font-lock-face) )
+  ;; ;; test: (progn (outline-back-to-heading) (outline-font-lock-face) )
+  ;; (setq-local outline-font-lock-faces (vconcat org-level-faces))
   ;; (font-lock-add-keywords nil outline-font-lock-keywords)
   ;; (setq-local font-lock-defaults
   ;;             '(outline-font-lock-keywords t nil nil backward-paragraph))

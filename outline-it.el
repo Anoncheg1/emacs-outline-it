@@ -53,6 +53,22 @@
 ;;
 ;; Touch: And God saw that it was good.
 ;;
+;; Other packages:
+;; - Navigation in Dired, Packages, Buffers modes https://github.com/Anoncheg1/firstly-search
+;; - Search with Chinese		https://github.com/Anoncheg1/pinyin-isearch
+;; - Ediff no 3-th window		https://github.com/Anoncheg1/ediffnw
+;; - Dired history			https://github.com/Anoncheg1/dired-hist
+;; - Selected window contrast		https://github.com/Anoncheg1/selected-window-contrast
+;; - Copy link to clipboard		https://github.com/Anoncheg1/org-links
+;; - Solution for "callback hell"	https://github.com/Anoncheg1/emacs-async1
+;; - Restore buffer state		https://github.com/Anoncheg1/emacs-unmodified-buffer1
+;; - Call LLMs and AI agents from Org-mode ai block. https://github.com/Anoncheg1/emacs-oai
+
+;; Donate:
+;; - BTC (Bitcoin) address: 1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25
+;; - USDT (Tether) address: TVoXfYMkVYLnQZV3mGZ6GvmumuBfGsZzsN
+;; - TON (Telegram) address: UQC8rjJFCHQkfdp7KmCkTZCb5dGzLFYe2TzsiZpfsnyTFt9D
+
 ;;; Code:
 ;;; -- Code
 (require 'outline)
@@ -104,7 +120,7 @@ Also configure isearch for C-M-s."
   (if outline-minor-mode
     (progn
       ;; - set
-      (print "outline-it-outline-minor-mode-hook1")
+      ;; (print "outline-it-outline-minor-mode-hook1")
       (add-hook 'isearch-mode-hook #'outline-it--header-search nil t)
 
       (unless outline-it--indent-line-function-original
@@ -114,7 +130,7 @@ Also configure isearch for C-M-s."
     ;; else - restore
     (remove-hook 'isearch-mode-hook #'outline-it--header-search t)
     (when outline-it--indent-line-function-original
-      (print "outline-it-outline-minor-mode-hook2")
+      ;; (print "outline-it-outline-minor-mode-hook2")
         (setq-local indent-line-function outline-it--indent-line-function-original)
         (setq-local outline-it--indent-line-function-original nil))))
 
@@ -241,7 +257,9 @@ because `forward-sexp' call itself several times recursively."
   (advice-add 'goto-line :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'compile-goto-error :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'help-function-def--button-function :after #'outline-it--jumping-to-invisible-fix)
-  (advice-add 'checkdoc-next-error :after #'outline-it--jumping-to-invisible-fix)
+  ;; checkdoc
+  ;; checkdoc-create-error
+  (advice-add 'checkdoc-create-error :before #'outline-it--jumping-to-invisible-fix)
   ;; dangerous
   (advice-add 'forward-sexp :after #'outline-it--forward-sexp-fix)
   (advice-add 'backward-sexp :after #'outline-it--forward-sexp-fix)

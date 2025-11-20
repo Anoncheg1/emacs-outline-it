@@ -104,3 +104,21 @@ Function outline-back-to-heading -> outline-level ( used by outline-hide-subleve
 - 7y https://github.com/tj64/outline-magic
 - 3y https://github.com/alphapapa/outshine (font-lock)
 - 4d https://github.com/jamescherti/outline-indent.el (font-lock)
+
+
+## Other packages
+- Navigation in Dired, Packages, Buffers modes https://github.com/Anoncheg1/firstly-search
+- Search with Chinese	https://github.com/Anoncheg1/pinyin-isearch
+- Ediff fix		https://github.com/Anoncheg1/ediffnw
+- Dired history	https://github.com/Anoncheg1/dired-hist
+- Selected window contrast	https://github.com/Anoncheg1/selected-window-contrast
+- Copy link to clipboard	https://github.com/Anoncheg1/org-links
+- Solution for "callback hell"	https://github.com/Anoncheg1/emacs-async1
+- Call LLMs and AI agents from Org-mode ai block. https://github.com/Anoncheg1/emacs-oai
+- Restore buffer state		https://github.com/Anoncheg1/emacs-unmodified-buffer1
+
+## Donate, sponsor author
+You can sponsor author crypto money directly with crypto currencies:
+- BTC (Bitcoin) address: 1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25
+- USDT (Tether) address: TVoXfYMkVYLnQZV3mGZ6GvmumuBfGsZzsN
+- TON (Telegram) address: UQC8rjJFCHQkfdp7KmCkTZCb5dGzLFYe2TzsiZpfsnyTFt9D

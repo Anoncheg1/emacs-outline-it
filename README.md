@@ -112,7 +112,7 @@ Function outline-back-to-heading -> outline-level ( used by outline-hide-subleve
 - Ediff fix		https://github.com/Anoncheg1/ediffnw
 - Dired history	https://github.com/Anoncheg1/dired-hist
 - Selected window contrast	https://github.com/Anoncheg1/selected-window-contrast
-- Copy link to clipboard	https://github.com/Anoncheg1/org-links
+- Copy link to clipboard	https://github.com/Anoncheg1/emacs-org-links
 - Solution for "callback hell"	https://github.com/Anoncheg1/emacs-async1
 - Call LLMs and AI agents from Org-mode ai block. https://github.com/Anoncheg1/emacs-oai
 - Restore buffer state		https://github.com/Anoncheg1/emacs-unmodified-buffer1

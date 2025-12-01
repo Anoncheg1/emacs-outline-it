@@ -62,7 +62,7 @@
 ;; - Copy link to clipboard		https://github.com/Anoncheg1/emacs-org-links
 ;; - Solution for "callback hell"	https://github.com/Anoncheg1/emacs-async1
 ;; - Restore buffer state		https://github.com/Anoncheg1/emacs-unmodified-buffer1
-;; - Call LLMs and AI agents from Org-mode ai block. https://github.com/Anoncheg1/emacs-oai
+;; - Call LLMs and AI agents from Org-mode ai block.  https://github.com/Anoncheg1/emacs-oai
 
 ;; Donate:
 ;; - BTC (Bitcoin) address: 1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25
@@ -70,11 +70,11 @@
 ;; - TON (Telegram) address: UQC8rjJFCHQkfdp7KmCkTZCb5dGzLFYe2TzsiZpfsnyTFt9D
 
 ;;; Code:
-;;; -- Code
+;; -= Code
 (require 'outline)
 (require 'org)
 
-;;; -- TAB key - indent.el configuration
+;; -= TAB key - indent.el configuration
 (defvar outline-it--indent-line-function-original nil)
 
 ;;;###autoload
@@ -98,7 +98,7 @@ Also called from `indent-according-to-mode'"
     (print (list "outline-it-toggle2" outline-it--indent-line-function-original))
     (print (indent--funcall-widened outline-it--indent-line-function-original))))
 
-;;; -- minor-mode-hook - for isearch and TAB key
+;; -= minor-mode-hook - for isearch and TAB key
 
 (defun outline-it--header-search ()
   "We use part of `outline-regexp' string to isearch in headers."
@@ -138,7 +138,7 @@ Also configure isearch for C-M-s."
   "Isearch and TAB key configuration without usage of minor mode."
   (let ((outline-minor-mode t)) (outline-it-outline-minor-mode-hook-function)))
 
-;;; -- add C-u C-w behavior to copy only headers
+;; -= add C-u C-w behavior to copy only headers
 (defun outline-it-copy-outline-headers (beg end &optional delete)
   "Copy outline headers between BEG and END that match `outline-regexp`.
 Also copies lines before the first top-level outline.
@@ -167,7 +167,7 @@ the buffer, as stated in `filter-buffer-substring-function', it is TODO."
         (string-join (append pre-outline headers) "\n"))
     ;; else - no prefix
     (buffer-substring--filter beg end delete)))
-;;; -- outline-level - function, fix, that match full line from outline-heading-alist by default
+;; -= outline-level - function, fix, that match full line from outline-heading-alist by default
 (defun outline-it--outline-level ()
   "We add `string-match' for assoc as TESTFN to find level.
 Depends on `outline-regexp'."
@@ -175,7 +175,7 @@ Depends on `outline-regexp'."
     (or (cdr (assoc ma outline-heading-alist 'string-match))
         (- (match-end 0) (match-beginning 0)))))
 
-;;; -- keys
+;; -= keys
 ;;;###autoload
 (defun outline-it-hide-others ()
   "Hide other headers and don't hide headers and text in opened."
@@ -207,11 +207,12 @@ Depends on `outline-regexp'."
       (error nil))))
 
 
-;;; -- fixes for other modes
-;;; -- -- C-, xref jump
-(defun outline-it--jumping-to-invisible-fix (&rest _args)
-  "Fix bug when we jump C-, to place hidden header."
-  (ignore _args)
+;; -= fixes for other modes
+;; -= -- C-, xref jump
+(defun outline-it--jumping-to-invisible-fix (&rest args)
+  "Fix bug when we jump C-, to place hidden header.
+Optional argument ARGS not used."
+  (ignore args)
   (print "outline-it--jumping-to-invisible-fix")
   ;; (apply orig-fun args)
   ;; (error "Asd")
@@ -237,7 +238,7 @@ Depends on `outline-regexp'."
     ;; (outline-hide-body)
     (outline-show-entry)))
 
-;;; -- -- advices activation
+;; -= -- advices activation
 
 (defun outline-it--forward-sexp-fix (&rest args)
   "Open outline if we move by sexp or some function.
@@ -273,7 +274,7 @@ because `forward-sexp' call itself several times recursively."
   ;; (advice-add 'set-mark-command :after #'outline-it--set-mark-command)
   )
 
-;;; -- Main
+;; -= Main
 ;;;###autoload
 (defun outline-it (&optional outline-r outline-it-heading-alist force-fontify)
   "Activate outline-minor mode with custom regex for header.
@@ -424,7 +425,7 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
       ;; No need for (goto-char ...) after (re-search-forward)
       )))
 
-;;; -- implementations
+;; -= implementations
 ;;;###autoload
 (defun outline-it-python ()
   "Python."
@@ -455,10 +456,10 @@ To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
               '(("^# -- " . 1))))
 
 
-;;; ? org bug ?
+;; -= ? org bug ?
 ;; (advice-remove 'outline-back-to-heading 'fix-for-org-fold)
 
-;;; provide
+;; -= provide
 (provide 'outline-it)
 
 ;;; outline-it.el ends here

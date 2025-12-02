@@ -69,11 +69,10 @@
 ;; - USDT (Tether) address: TVoXfYMkVYLnQZV3mGZ6GvmumuBfGsZzsN
 ;; - TON (Telegram) address: UQC8rjJFCHQkfdp7KmCkTZCb5dGzLFYe2TzsiZpfsnyTFt9D
 
-;;; Code:
-;; -= Code
 (require 'outline)
 (require 'org)
 
+;;; Code:
 ;; -= TAB key - indent.el configuration
 (defvar outline-it--indent-line-function-original nil)
 
@@ -296,47 +295,106 @@ If FORCE-FONTIFY is non-nil - outline fontification for modes with own
 font-lock overrided with outline mode fonts for `outline-regexp'."
   (interactive)
   (print (list "outline-it"  outline-r outline-it-heading-alist))
+  (cond
+   ;; else - Case 1) multilevel: outline-it-heading-alist (no outline-regexp)
+   ((and outline-it-heading-alist (not outline-r))
+    ;; (setq-local outline-regexp "")
+    (setq outline-r (string-join (mapcar (lambda (el) (car el)) outline-heading-alist) "\\|"))
+    ;; (setq-local outline-heading-alist outline-it-heading-alist)
+    (print (list "case2" outline-heading-alist outline-r)))
+   ;; Case 2) one level: outline-regexp  (no outline-it-heading-alist)
+   ((and outline-r (not outline-it-heading-alist))
+    (print "case2")
+    ;; (setq-local outline-heading-alist nil)
+    ;; (setq-local outline-regexp outline-r)
+    (setq-local outline-it-heading-alist
+                (list (cons outline-regexp 1))))
 
-  ;; - deactivation outline
+   ((and (buffer-file-name) (or (string-equal (file-name-nondirectory (buffer-file-name)) ".emacs")
+                                (string-equal (file-name-nondirectory (buffer-file-name)) "init.el")))
+    (print "case3")
+    (setq outline-r "^;; -- ")
+    (setq outline-it-heading-alist
+                '((";; -- " . 1)
+                  (";; -- -- " . 2)
+                  (";; -- -- -- " . 3)
+                  (";; -- -- -- -- " . 4)
+                  (";; -- -- -- -- -- " . 5)
+                  (";; -- -- -- -- -- -- " . 6))))
+
+   ;; ((and outline-r outline-it-heading-alist)
+   ;;  (print "case4")
+   ;;  (setq-local outline-regexp outline-r)
+   ;;  (setq-local outline-heading-alist outline-it-heading-alist))
+
+   ((and (not outline-r)
+         (not outline-it-heading-alist)
+         (string-suffix-p ".el" (buffer-file-name))
+         (not (file-remote-p (or (buffer-file-name)
+                                 default-directory)))
+         (not (dir-locals--all-files default-directory)))
+    (print "case5")
+    (setq outline-r "^;;; \\|\n+[^;][^;][^;]")
+    (setq outline-it-heading-alist
+          '((";;; " . 1)
+            ("" . 2))))
+   (t
+    (user-error "Arguments for outline-it function should be provided")
+    ;; (setq-local outline-heading-alist
+    ;;             (list (cons outline-regexp 1))))
+    ))
+  ;; - Set main variables, deactivation outline for that
   (outline-minor-mode -1)
+  (when outline-r (print "ok") (setq-local outline-regexp outline-r))
+  (when outline-it-heading-alist (setq-local outline-heading-alist outline-it-heading-alist))
 
   ;; - set outline variables
-  (cond
+  ;; (cond
 
-        ;; else - Case 1) multilevel: outline-it-heading-alist (no outline-regexp)
-        ((and outline-it-heading-alist (not outline-r))
-         ;; (setq-local outline-regexp "")
-         (setq-local outline-regexp (string-join (mapcar (lambda (el) (car el)) outline-heading-alist) "\\|"))
-         (setq-local outline-heading-alist outline-it-heading-alist)
-         (print (list "case2" outline-heading-alist outline-r)))
-        ;; Case 2) one level: outline-regexp  (no outline-it-heading-alist)
-        ((and outline-r (not outline-it-heading-alist))
-         (print "case2")
-         ;; (setq-local outline-heading-alist nil)
-         (setq-local outline-regexp outline-r)
-         (setq-local outline-heading-alist
-                     (list (cons outline-regexp 1))))
+  ;;       ;; else - Case 1) multilevel: outline-it-heading-alist (no outline-regexp)
+  ;;       ((and outline-it-heading-alist (not outline-r))
+  ;;        ;; (setq-local outline-regexp "")
+  ;;        (setq-local outline-regexp (string-join (mapcar (lambda (el) (car el)) outline-heading-alist) "\\|"))
+  ;;        (setq-local outline-heading-alist outline-it-heading-alist)
+  ;;        (print (list "case2" outline-heading-alist outline-r)))
+  ;;       ;; Case 2) one level: outline-regexp  (no outline-it-heading-alist)
+  ;;       ((and outline-r (not outline-it-heading-alist))
+  ;;        (print "case2")
+  ;;        ;; (setq-local outline-heading-alist nil)
+  ;;        (setq-local outline-regexp outline-r)
+  ;;        (setq-local outline-heading-alist
+  ;;                    (list (cons outline-regexp 1))))
 
-        ((and (buffer-file-name) (or (string-equal (file-name-nondirectory (buffer-file-name)) ".emacs")
-                                     (string-equal (file-name-nondirectory (buffer-file-name)) "init.el")))
-         (print "case3")
-         (setq-local outline-regexp ";; -- ")
-         (setq-local outline-heading-alist
-                     '((";; -- " . 1)
-                       (";; -- -- " . 2)
-                       (";; -- -- -- " . 3)
-                       (";; -- -- -- -- " . 4)
-                       (";; -- -- -- -- -- " . 5)
-                       (";; -- -- -- -- -- -- " . 6))))
-        ((and outline-r outline-it-heading-alist)
-         (setq-local outline-regexp outline-r)
-         (setq-local outline-heading-alist outline-it-heading-alist))
+  ;;       ((and (buffer-file-name) (or (string-equal (file-name-nondirectory (buffer-file-name)) ".emacs")
+  ;;                                    (string-equal (file-name-nondirectory (buffer-file-name)) "init.el")))
+  ;;        (print "case3")
+  ;;        (setq-local outline-regexp "^;; -- ")
+  ;;        (setq-local outline-heading-alist
+  ;;                    '((";; -- " . 1)
+  ;;                      (";; -- -- " . 2)
+  ;;                      (";; -- -- -- " . 3)
+  ;;                      (";; -- -- -- -- " . 4)
+  ;;                      (";; -- -- -- -- -- " . 5)
+  ;;                      (";; -- -- -- -- -- -- " . 6))))
 
-        (t
-         (user-error "Arguments for outline-it function should be provided")
-           ;; (setq-local outline-heading-alist
-           ;;             (list (cons outline-regexp 1))))
-        ))
+  ;;       ((and outline-r outline-it-heading-alist)
+  ;;        (print "case4")
+  ;;        (setq-local outline-regexp outline-r)
+  ;;        (setq-local outline-heading-alist outline-it-heading-alist))
+
+  ;;       ((and (buffer-file-name)
+  ;;             (string-suffix-p ".el" (buffer-file-name))
+  ;;             (not (file-remote-p (or (buffer-file-name)
+  ;;                                       default-directory)))
+  ;;             (not (dir-locals--all-files default-directory)))
+  ;;        (print "case5")
+  ;;        (setq-local outline-regexp "^;;; "))
+
+  ;;       (t
+  ;;        (user-error "Arguments for outline-it function should be provided")
+  ;;          ;; (setq-local outline-heading-alist
+  ;;          ;;             (list (cons outline-regexp 1))))
+  ;;       ))
   (setq outline-default-state 'outline-show-only-headings)
   ;; - Keys
   (keymap-set outline-minor-mode-map "<backtab>" 'outline-cycle-buffer) ;; S-tab

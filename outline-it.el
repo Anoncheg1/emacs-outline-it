@@ -69,10 +69,11 @@
 ;; - USDT (Tether) address: TVoXfYMkVYLnQZV3mGZ6GvmumuBfGsZzsN
 ;; - TON (Telegram) address: UQC8rjJFCHQkfdp7KmCkTZCb5dGzLFYe2TzsiZpfsnyTFt9D
 
+;;; Code:
+;; -= Includes
 (require 'outline)
 (require 'org)
 
-;;; Code:
 ;; -= TAB key - indent.el configuration
 (defvar outline-it--indent-line-function-original nil)
 
@@ -85,17 +86,16 @@ Compare full line with `outline-regexp' variable.
 Return noindent symbol if success.
 Also called from `indent-according-to-mode'"
   (interactive)
-  (if (eq 0 (string-match outline-regexp
-                    (buffer-substring-no-properties (line-beginning-position)
-                                      (line-end-position))))
+  ;; check if at header
+  (if (save-excursion (beginning-of-line) (let ((p (point))) (outline-back-to-heading) (eq p (point))))
       (progn
-        (print "outline-it-toggle1")
+        ;; (print "outline-it-toggle1")
         (outline-toggle-children)
         'noindent ; stop TAB sequence
         )
     ;; else - not header, call original
     (print (list "outline-it-toggle2" outline-it--indent-line-function-original))
-    (print (indent--funcall-widened outline-it--indent-line-function-original))))
+    (indent--funcall-widened outline-it--indent-line-function-original)))
 
 ;; -= minor-mode-hook - for isearch and TAB key
 
@@ -168,24 +168,33 @@ the buffer, as stated in `filter-buffer-substring-function', it is TODO."
     (buffer-substring--filter beg end delete)))
 ;; -= outline-level - function, fix, that match full line from outline-heading-alist by default
 (defun outline-it--outline-level ()
-  "We add `string-match' for assoc as TESTFN to find level.
+  "Rewrite of function `outline-level'.
+We add `string-match' for assoc as TESTFN to find level.
 Depends on `outline-regexp'."
   (let ((ma (substring-no-properties (match-string 0))))
     (or (cdr (assoc ma outline-heading-alist 'string-match))
         (- (match-end 0) (match-beginning 0)))))
 
+;; - test:
+;; (defvar outline-heading-alist2
+;;   '((";;; " . 1) (";; -= " . 2)))
+;; (print outline-heading-alist)
+;; (cadr outline-heading-alist)
+;; (assoc "^;;; " (eval outline-heading-alist) (lambda (a b) "outline-it--outline-level" (string-match (regexp-quote (car a)) b)))
+;; (assoc ";; -= " outline-heading-alist 'string-match)
+;; (assoc ";; -= " '((";;; " . 1) (";; -= " . 2)) 'string-match)
 ;; -= keys
 ;;;###autoload
 (defun outline-it-hide-others ()
   "Hide other headers and don't hide headers and text in opened."
   (interactive)
-  (print "outline-it-hide-others")
+  ;; (print "outline-it-hide-others")
   (save-excursion
     (outline-hide-sublevels 7) ;; hide all
     (outline-show-children) ;; show headers, not shure how and wehere,
     (outline-back-to-heading t) ;; to header in depths
     (outline-show-entry) ;; show local text
-    (print "outline-it-hide-others1")
+    ;; (print "outline-it-hide-others1")
     (condition-case nil
         (progn
           (outline-up-heading 1 t) ;; go upper - signal warning
@@ -194,9 +203,9 @@ Depends on `outline-regexp'."
           (while (> (progn ;; (outline-back-to-heading t)
                       (funcall outline-level))
                     1) ;; while not at first header
-            (print (list "outline-it-hide-others3" (progn (outline-back-to-heading t)
-                                                         (funcall outline-level))
-                         (point)))
+            ;; (print (list "outline-it-hide-others3" (progn (outline-back-to-heading t)
+            ;;                                               (funcall outline-level))
+            ;;              (point)))
             (outline-show-entry)
             (outline-show-children) ;; show subheaders
 
@@ -206,13 +215,12 @@ Depends on `outline-regexp'."
       (error nil))))
 
 
-;; -= fixes for other modes
-;; -= -- C-, xref jump
+;; -= C-, xref jump
 (defun outline-it--jumping-to-invisible-fix (&rest args)
   "Fix bug when we jump C-, to place hidden header.
 Optional argument ARGS not used."
   (ignore args)
-  (print "outline-it--jumping-to-invisible-fix")
+  ;; (print "outline-it--jumping-to-invisible-fix")
   ;; (apply orig-fun args)
   ;; (error "Asd")
   (when (or
@@ -272,7 +280,12 @@ because `forward-sexp' call itself several times recursively."
   (add-hook 'find-function-after-hook #'outline-it--jumping-to-invisible-fix)
   ;; (advice-add 'set-mark-command :after #'outline-it--set-mark-command)
   )
-
+;; -= unqoute
+(defun outline-it--unquote-all (x)
+  "Recursively remove any leading 'quote from a Lisp value."
+  (while (and (listp x) (eq (car x) 'quote))
+    (setq x (cadr x)))
+  x)
 ;; -= Main
 ;;;###autoload
 (defun outline-it (&optional outline-r outline-it-heading-alist force-fontify)
@@ -298,7 +311,6 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
   (cond
    ;; else - Case 1) multilevel: outline-it-heading-alist (no outline-regexp)
    ((and outline-it-heading-alist (not outline-r))
-    ;; (setq-local outline-regexp "")
     (setq outline-r (string-join (mapcar (lambda (el) (car el)) outline-heading-alist) "\\|"))
     ;; (setq-local outline-heading-alist outline-it-heading-alist)
     (print (list "case2" outline-heading-alist outline-r)))
@@ -307,7 +319,7 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
     (print "case2")
     ;; (setq-local outline-heading-alist nil)
     ;; (setq-local outline-regexp outline-r)
-    (setq-local outline-it-heading-alist
+    (setq outline-it-heading-alist
                 (list (cons outline-regexp 1))))
 
    ((and (buffer-file-name) (or (string-equal (file-name-nondirectory (buffer-file-name)) ".emacs")
@@ -338,6 +350,14 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
     (setq outline-it-heading-alist
           '((";;; " . 1)
             ("" . 2))))
+   ;; configured from .dir-locals.el
+   ((and (not outline-r)
+         (not outline-it-heading-alist)
+         (dir-locals--all-files default-directory)
+         outline-heading-alist) ; was set in .dir-locals.el
+    (setq outline-r outline-regexp)
+    (setq outline-it-heading-alist outline-heading-alist))
+
    (t
     (user-error "Arguments for outline-it function should be provided")
     ;; (setq-local outline-heading-alist
@@ -345,9 +365,12 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
     ))
   ;; - Set main variables, deactivation outline for that
   (outline-minor-mode -1)
-  (when outline-r (print "ok") (setq-local outline-regexp outline-r))
-  (when outline-it-heading-alist (setq-local outline-heading-alist outline-it-heading-alist))
-
+  (when outline-r (print "ok")
+        (setq-local outline-regexp outline-r))
+  (when outline-it-heading-alist
+        (setq-local outline-heading-alist outline-it-heading-alist))
+  ;; - fix if outline-heading-alist is quoted. for string-match in `outline-it--outline-level'
+  (setq outline-heading-alist (outline-it--unquote-all outline-heading-alist))
   ;; - set outline variables
   ;; (cond
 

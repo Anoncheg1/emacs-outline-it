@@ -282,7 +282,8 @@ because `forward-sexp' call itself several times recursively."
   )
 ;; -= unqoute
 (defun outline-it--unquote-all (x)
-  "Recursively remove any leading 'quote from a Lisp value."
+  "Recursively remove any leading 'quote from a Lisp value.
+Argument X some elisp value quoted or not."
   (while (and (listp x) (eq (car x) 'quote))
     (setq x (cadr x)))
   x)

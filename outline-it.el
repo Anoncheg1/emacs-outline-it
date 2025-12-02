@@ -282,7 +282,7 @@ because `forward-sexp' call itself several times recursively."
   )
 ;; -= unqoute
 (defun outline-it--unquote-all (x)
-  "Recursively remove any leading \'quote from a Lisp value.
+  "Recursively remove any leading \='quote from a Lisp value.
 Argument X some elisp value quoted or not."
   (while (and (listp x) (eq (car x) 'quote))
     (setq x (cadr x)))
@@ -369,7 +369,7 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
     ))
   ;; - Set main variables, deactivation outline for that
   (outline-minor-mode -1)
-  (when outline-r (print "ok")
+  (when outline-r
         (setq-local outline-regexp outline-r))
   (when outline-it-heading-alist
         (setq-local outline-heading-alist outline-it-heading-alist))

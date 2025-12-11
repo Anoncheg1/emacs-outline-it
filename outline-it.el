@@ -87,14 +87,19 @@ Return noindent symbol if success.
 Also called from `indent-according-to-mode'"
   (interactive)
   ;; check if at header
-  (if (save-excursion (beginning-of-line) (let ((p (point))) (outline-back-to-heading) (eq p (point))))
+  (if (save-excursion (beginning-of-line)
+                      (let ((p (point)))
+                        (condition-case nil
+                            (outline-back-to-heading)
+                          (eq p (point))
+                          (error nil))))
       (progn
         ;; (print "outline-it-toggle1")
         (outline-toggle-children)
         'noindent ; stop TAB sequence
         )
     ;; else - not header, call original
-    (print (list "outline-it-toggle2" outline-it--indent-line-function-original))
+    ;; (print (list "outline-it-toggle2" outline-it--indent-line-function-original))
     (indent--funcall-widened outline-it--indent-line-function-original)))
 
 ;; -= minor-mode-hook - for isearch and TAB key

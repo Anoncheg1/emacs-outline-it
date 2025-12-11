@@ -90,8 +90,9 @@ Also called from `indent-according-to-mode'"
   (if (save-excursion (beginning-of-line)
                       (let ((p (point)))
                         (condition-case nil
-                            (outline-back-to-heading)
-                          (eq p (point))
+                            (progn
+                              (outline-back-to-heading)
+                              (eq p (point)))
                           (error nil))))
       (progn
         ;; (print "outline-it-toggle1")

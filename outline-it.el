@@ -222,34 +222,69 @@ Depends on `outline-regexp'."
 
 
 ;; -= C-, xref jump
+;; (defun outline-it--jumping-to-invisible-fix (&rest args)
+;;   "Fix bug when we jump C-, to place hidden header.
+;; Optional argument ARGS not used."
+;;   (ignore args)
+;;   ;; (print "outline-it--jumping-to-invisible-fix")
+;;   ;; (apply orig-fun args)
+;;   ;; (error "Asd")
+;;   (when (or
+;;          ;; - at hidder
+;;          ;; if line is empty it have no properties, we handle this case
+;;          (if (string-empty-p (string-trim (buffer-substring-no-properties (line-beginning-position)
+;;                                                                            (line-end-position))))
+;;              (save-excursion (forward-line -1)
+;;                              (eq (get-char-property (point) 'invisible) 'outline))
+;;            ;; else - not empy
+;;            (eq (get-char-property (point) 'invisible) 'outline))
+;;          ;; - or at header and next line is hidden
+;;          (and (save-match-data
+;;                 (string-match outline-regexp
+;;                               (buffer-substring (line-beginning-position)
+;;                                                 (line-end-position))))
+;;               (condition-case nil
+;;                   (save-excursion
+;;                     (forward-line)
+;;                     (eq (get-char-property (point) 'invisible) 'outline))
+;;                     (error nil))))
+;;     ;; (outline-hide-body)
+;;     (outline-show-entry)))
+
+
+
+
 (defun outline-it--jumping-to-invisible-fix (&rest args)
   "Fix bug when we jump C-, to place hidden header.
-Optional argument ARGS not used."
+Optional argument ARGS not used.
+Applied after.TODO rename.
+`line-end-position' have invisible property in two cases:
+- at header with hidden next line
+- at hiddent line
+
+At empty line before header never give invisible. "
   (ignore args)
-  ;; (print "outline-it--jumping-to-invisible-fix")
-  ;; (apply orig-fun args)
-  ;; (error "Asd")
   (when (or
-         ;; - at hidder
-         ;; if line is empty it have no properties, we handle this case
-         (if (string-empty-p (string-trim (buffer-substring-no-properties (line-beginning-position)
-                                                                           (line-end-position))))
-             (save-excursion (forward-line -1)
-                             (eq (get-char-property (point) 'invisible) 'outline))
-           ;; else - not empy
-           (eq (get-char-property (point) 'invisible) 'outline))
-         ;; - or at header and next line is hidden
          (and (save-match-data
-                (string-match outline-regexp
-                              (buffer-substring (line-beginning-position)
-                                                (line-end-position))))
-              (condition-case nil
-                  (save-excursion
-                    (forward-line)
-                    (eq (get-char-property (point) 'invisible) 'outline))
-                    (error nil))))
-    ;; (outline-hide-body)
+                   (string-match outline-regexp
+                                 (buffer-substring (line-beginning-position)
+                                                   (line-end-position))))
+              (eq (get-char-property (line-beginning-position) 'invisible) 'outline))
+         (and (not (save-match-data
+                   (string-match outline-regexp
+                                 (buffer-substring (line-beginning-position)
+                                                   (line-end-position)))))
+              (eq (get-char-property (line-end-position) 'invisible) 'outline))
+         ;; at empty line before header, that never give invisible
+         (and (string-empty-p (string-trim (buffer-substring-no-properties (line-beginning-position)
+                                                                       (line-end-position))))
+              (string-match outline-regexp
+                                 (buffer-substring (line-beginning-position)
+                                                   (line-end-position 2)))
+              (save-excursion (forward-line -1)
+                              (eq (get-char-property (point) 'invisible) 'outline))))
     (outline-show-entry)))
+
 
 ;; -= -- advices activation
 
@@ -274,6 +309,7 @@ because `forward-sexp' call itself several times recursively."
   ;; checkdoc
   ;; checkdoc-create-error
   (advice-add 'checkdoc-create-error :before #'outline-it--jumping-to-invisible-fix)
+  (advice-add 'undo :after #'outline-it--jumping-to-invisible-fix)
   ;; dangerous
   (advice-add 'forward-sexp :after #'outline-it--forward-sexp-fix)
   (advice-add 'backward-sexp :after #'outline-it--forward-sexp-fix)

@@ -221,48 +221,17 @@ Depends on `outline-regexp'."
       (error nil))))
 
 
-;; -= C-, xref jump
-;; (defun outline-it--jumping-to-invisible-fix (&rest args)
-;;   "Fix bug when we jump C-, to place hidden header.
-;; Optional argument ARGS not used."
-;;   (ignore args)
-;;   ;; (print "outline-it--jumping-to-invisible-fix")
-;;   ;; (apply orig-fun args)
-;;   ;; (error "Asd")
-;;   (when (or
-;;          ;; - at hidder
-;;          ;; if line is empty it have no properties, we handle this case
-;;          (if (string-empty-p (string-trim (buffer-substring-no-properties (line-beginning-position)
-;;                                                                            (line-end-position))))
-;;              (save-excursion (forward-line -1)
-;;                              (eq (get-char-property (point) 'invisible) 'outline))
-;;            ;; else - not empy
-;;            (eq (get-char-property (point) 'invisible) 'outline))
-;;          ;; - or at header and next line is hidden
-;;          (and (save-match-data
-;;                 (string-match outline-regexp
-;;                               (buffer-substring (line-beginning-position)
-;;                                                 (line-end-position))))
-;;               (condition-case nil
-;;                   (save-excursion
-;;                     (forward-line)
-;;                     (eq (get-char-property (point) 'invisible) 'outline))
-;;                     (error nil))))
-;;     ;; (outline-hide-body)
-;;     (outline-show-entry)))
-
-
+;; -= fix advice function
 
 
 (defun outline-it--jumping-to-invisible-fix (&rest args)
   "Fix bug when we jump C-, to place hidden header.
 Optional argument ARGS not used.
-Applied after.TODO rename.
-`line-end-position' have invisible property in two cases:
+Cases:
+1) `line-end-position' have invisible property in two cases:
 - at header with hidden next line
 - at hiddent line
-
-At empty line before header never give invisible. "
+2) At empty line before header never give invisible."
   (ignore args)
   (when (or
          (and (save-match-data

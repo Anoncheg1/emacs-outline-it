@@ -44,15 +44,21 @@
 ;; ;; sh-mode sets '###' to `outline-regexp'
 ;; (add-hook 'sh-mode-hook 'outline-it-any-mode-hook-function) ; optional
 ;;
-;;
+;; Usage:
 ;; M-x outline-it-githubactionlog
 ;; M-x outline-it-python
+
+;; To deactivate:
+;; ...
 ;;
+;; for outline-it-any-mode-hook-function:
+;; M-x outline-it-advices-deactivation
+
 ;; ;; in Elisp shadows `elisp-eval-region-or-buffer'
 ;; Recommend to bind: (keymap-local-set "C-c C-e" #'outline-it-hide-others)
-;;
-;; Touch: And God saw that it was good.
-;;
+
+;;; TODO: implement full deactivation for `outline-it' function
+
 ;; Other packages:
 ;; - Navigation in major modes https://github.com/Anoncheg1/firstly-search
 ;; - Search with Chinese	https://github.com/Anoncheg1/pinyin-isearch
@@ -70,6 +76,7 @@
 ;; - TON (Telegram) address: UQC8rjJFCHQkfdp7KmCkTZCb5dGzLFYe2TzsiZpfsnyTFt9D
 
 ;;; Code:
+;; Touch: And God saw that it was good.
 ;; -= Includes
 (require 'outline)
 (require 'org)
@@ -100,7 +107,7 @@ Also called from `indent-according-to-mode'"
         'noindent ; stop TAB sequence
         )
     ;; else - not header, call original
-    ;; (print (list "outline-it-toggle2" outline-it--indent-line-function-original))
+    (print (list "outline-it-toggle2" outline-it--indent-line-function-original))
     (indent--funcall-widened outline-it--indent-line-function-original)))
 
 ;; -= minor-mode-hook - for isearch and TAB key
@@ -268,6 +275,7 @@ because `forward-sexp' call itself several times recursively."
 ;;;###autoload
 (defun outline-it-advices-activation ()
   "Dont depend on `outline-minor-mode'."
+  (interactive)
   (advice-add 'xref-find-definitions :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'xref-go-back :after #'outline-it--jumping-to-invisible-fix)
   ;; C-u C-SPC
@@ -290,6 +298,24 @@ because `forward-sexp' call itself several times recursively."
   ;; - for Backtrace buffer buttons.
   (add-hook 'find-function-after-hook #'outline-it--jumping-to-invisible-fix)
   ;; (advice-add 'set-mark-command :after #'outline-it--set-mark-command)
+  )
+
+(defun outline-it-advices-deactivation ()
+  "Undo `outline-it-any-mode-hook-function' changes also."
+  (interactive)
+  (advice-remove 'xref-find-definitions #'outline-it--jumping-to-invisible-fix)
+  (advice-remove 'xref-go-back #'outline-it--jumping-to-invisible-fix)
+  (advice-remove 'pop-to-mark-command #'outline-it--jumping-to-invisible-fix)
+  (advice-remove 'goto-line #'outline-it--jumping-to-invisible-fix)
+  (advice-remove 'compile-goto-error #'outline-it--jumping-to-invisible-fix)
+  (advice-remove 'help-function-def--button-function #'outline-it--jumping-to-invisible-fix)
+  (advice-remove 'checkdoc-create-error #'outline-it--jumping-to-invisible-fix)
+  (advice-remove 'undo #'outline-it--jumping-to-invisible-fix)
+  (advice-remove 'forward-sexp #'outline-it--forward-sexp-fix)
+  (advice-remove 'backward-sexp #'outline-it--forward-sexp-fix)
+  (remove-hook 'find-function-after-hook #'outline-it--jumping-to-invisible-fix)
+  ;; restore indent function and remove hooks
+  (let ((outline-minor-mode nil)) (outline-it-outline-minor-mode-hook-function))
   )
 ;; -= unqoute
 (defun outline-it--unquote-all (x)

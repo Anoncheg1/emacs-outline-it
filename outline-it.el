@@ -198,38 +198,56 @@ Depends on `outline-regexp'."
 ;; (assoc ";; -= " '((";;; " . 1) (";; -= " . 2)) 'string-match)
 ;; -= keys
 ;;;###autoload
-(defun outline-it-hide-others ()
-  "Hide other headers and don't hide headers and text in opened."
+(defun outline-it-hide-other ()
+  "Hide everything except current body and parent and top-level headings.
+This also unhides the top heading-less body, if any.
+`outline-hide-other' with one line changed."
   (interactive)
-  ;; (print "outline-it-hide-others")
-  (save-excursion
-    (outline-hide-sublevels 7) ;; hide all
-    (outline-show-children) ;; show headers, not shure how and wehere,
-    (outline-back-to-heading t) ;; to header in depths
-    (outline-show-entry) ;; show local text
-    ;; (print "outline-it-hide-others1")
-    (condition-case nil
-        (progn
-          (outline-up-heading 1 t) ;; go upper - signal warning
-          ;; (print "my/outline-hide-other2")
-          ;; (outline-show-entry)
-          (while (> (progn ;; (outline-back-to-heading t)
-                      (funcall outline-level))
-                    1) ;; while not at first header
-            ;; (print (list "outline-it-hide-others3" (progn (outline-back-to-heading t)
-            ;;                                               (funcall outline-level))
-            ;;              (point)))
-            (outline-show-entry)
-            (outline-show-children) ;; show subheaders
+  (outline-hide-sublevels 9899) ; only this line changed
+  (let (outline-view-change-hook)
+    (save-excursion
+      (outline-back-to-heading t)
+      (outline-show-entry)
+      (while (condition-case nil (progn (outline-up-heading 1 t) (not (bobp)))
+	       (error nil))
+	(outline-flag-region (1- (point))
+			     (save-excursion (forward-line 1) (point))
+			     nil))))
+  (run-hooks 'outline-view-change-hook))
+;; (defun outline-it-hide-others ()
+;;   "Hide other headers and don't hide headers and text in opened."
+;;   (interactive)
+;;   ;; (print "outline-it-hide-others")
+;;   (save-excursion
+;;     (outline-hide-sublevels 7) ;; hide all
+;;     (outline-show-children) ;; show headers, not shure how and wehere,
+;;     (outline-back-to-heading t) ;; to header in depths
+;;     (outline-show-entry) ;; show local text
+;;     ;; (print "outline-it-hide-others1")
+;;     (condition-case nil
+;;         (progn
+;;           (outline-up-heading 1 t) ;; go upper - signal warning
+;;           ;; (print "my/outline-hide-other2")
+;;           ;; (outline-show-entry)
+;;           (while (> (progn ;; (outline-back-to-heading t)
+;;                       (funcall outline-level))
+;;                     1) ;; while not at first header
+;;             ;; (print (list "outline-it-hide-others3" (progn (outline-back-to-heading t)
+;;             ;;                                               (funcall outline-level))
+;;             ;;              (point)))
+;;             (outline-show-entry)
+;;             (outline-show-children) ;; show subheaders
 
-            (condition-case nil
-                (outline-up-heading 1 t) ;; go upper  - signal warning
-              (error nil))))
-      (error nil))))
+;;             (condition-case nil
+;;                 (outline-up-heading 1 t) ;; go upper  - signal warning
+;;               (error nil))))
+;;       (error nil))))
 
 
 ;; -= fix advice function
 
+
+(defvar outline-it--additional-fix-to-auto-recenter t)
 
 (defun outline-it--jumping-to-invisible-fix (&rest args)
   "Fix bug when we jump C-, to place hidden header.
@@ -260,7 +278,26 @@ Cases:
               (save-excursion (forward-line -1)
                               (eq (get-char-property (point) 'invisible) 'outline))))
     (outline-show-entry)))
+  ;; ;; additional fix to auto recenter
+  ;; (when (and (pos-visible-in-window-p (save-excursion
+  ;;                                       (forward-line 8)
+  ;;                                       (point)))
+  ;;            (eq (window-buffer) (current-buffer))) ; if showed
+  ;;   (print "recenter")
+  ;;   (recenter 2))
+  ;; )
+(defun outline-it--backtrace-jump-at-bottom-fix (&rest args)
+  "Check if at least 8 lines visible after jumping, if not recenter."
+  (ignore args)
+  ;; (print (list "outline-it--backtrace-jump-at-bottom-fix" (point) (current-buffer)))
+  (when (and (not (pos-visible-in-window-p (save-excursion
+                                        (forward-line 8)
+                                        (point))))
+             (eq (window-buffer) (current-buffer))) ; if showed
+    (print "recenter my/backtrace-jump-at-bottom-fix")
+    (recenter)))
 
+;; (add-hook 'xref-after-jump-hook #'my/fastfix)
 
 ;; -= -- advices activation
 
@@ -278,11 +315,13 @@ because `forward-sexp' call itself several times recursively."
   (interactive)
   (advice-add 'xref-find-definitions :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'xref-go-back :after #'outline-it--jumping-to-invisible-fix)
+  (advice-add 'xref-go-back :after #'outline-it--backtrace-jump-at-bottom-fix)
   ;; C-u C-SPC
   (advice-add 'pop-to-mark-command :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'goto-line :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'compile-goto-error :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'help-function-def--button-function :after #'outline-it--jumping-to-invisible-fix)
+  (advice-add 'help-function-def--button-function :after #'outline-it--backtrace-jump-at-bottom-fix)
   ;; checkdoc
   ;; checkdoc-create-error
   (advice-add 'checkdoc-create-error :before #'outline-it--jumping-to-invisible-fix)

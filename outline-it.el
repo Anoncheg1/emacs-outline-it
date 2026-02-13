@@ -196,24 +196,90 @@ Depends on `outline-regexp'."
 ;; (assoc "^;;; " (eval outline-heading-alist) (lambda (a b) "outline-it--outline-level" (string-match (regexp-quote (car a)) b)))
 ;; (assoc ";; -= " outline-heading-alist 'string-match)
 ;; (assoc ";; -= " '((";;; " . 1) (";; -= " . 2)) 'string-match)
-;; -= keys
+;; -= hide-other
+;; 1) fix for Org mode
+;; (progn (outline-back-to-heading)
+
+;;         ;; (match-string 0)) ";; -= "
+;;        (funcall #'outline-level))
+;; (outline-map-region (lambda ()
+;;                       ;; (outline-back-to-heading)
+;;                       (print (list (funcall outline-level) (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))
+;;                                       (point-min) (point-max) )
+
+;; FIX FOR (funcall outline-level) - that breaks match data and not working properly
+(defun outline-it-hide-sublevels (levels)
+  "Hide everything but the top LEVELS levels of headers, in whole buffer.
+This also unhides the top heading-less body, if any.
+
+Interactively, the prefix argument supplies the value of LEVELS.
+When invoked without a prefix argument, LEVELS defaults to the level
+of the current heading, or to 1 if the current line is not a heading."
+  (interactive (list
+		(cond
+		 (current-prefix-arg (prefix-numeric-value current-prefix-arg))
+		 ((save-excursion
+                    (forward-line 0)
+		    (if outline-search-function
+                        (funcall outline-search-function nil nil nil t)
+                      (looking-at outline-regexp)))
+		  (funcall #'outline-level))
+		 (t 1))))
+  (if (< levels 1)
+      (error "Must keep at least one level of headers"))
+  (save-excursion
+    (let* (outline-view-change-hook
+           (beg (progn
+                  (goto-char (point-min))
+                  ;; Skip the prelude, if any.
+                  (unless (outline-on-heading-p t) (outline-next-heading))
+                  (point)))
+           (end (progn
+                  (goto-char (point-max))
+                  ;; Keep empty last line, if available.
+                  (if (bolp) (1- (point)) (point)))))
+      (if (< end beg)
+	  (setq beg (prog1 end (setq end beg))))
+      ;; First hide everything.
+      (outline-flag-region beg end t)
+      ;; Then unhide the top level headers.
+      (outline-map-region
+       (lambda ()
+	 (if (<= (funcall #'outline-level) levels)
+	     (outline-show-heading)))
+       beg end)
+      ;; Finally unhide any trailing newline.
+      (goto-char (point-max))
+      (if (and (bolp) (not (bobp)) (outline-invisible-p (1- (point))))
+          (outline-flag-region (1- (point)) (point) nil))))
+  (run-hooks 'outline-view-change-hook))
+
 ;;;###autoload
 (defun outline-it-hide-other ()
   "Hide everything except current body and parent and top-level headings.
 This also unhides the top heading-less body, if any.
 `outline-hide-other' with one line changed."
   (interactive)
-  (outline-hide-sublevels 9899) ; only this line changed
-  (let (outline-view-change-hook)
-    (save-excursion
-      (outline-back-to-heading t)
-      (outline-show-entry)
-      (while (condition-case nil (progn (outline-up-heading 1 t) (not (bobp)))
-	       (error nil))
-	(outline-flag-region (1- (point))
-			     (save-excursion (forward-line 1) (point))
-			     nil))))
-  (run-hooks 'outline-view-change-hook))
+  (if (derived-mode-p 'org-mode) ;; changed: Fix folding other sublevels and text at upper header
+      (save-excursion
+        (org-overview)
+        (org-reveal '(4))
+        (org-fold-show-subtree))
+    ;; else
+    (outline-it-hide-sublevels (if (derived-mode-p 'org-mode)
+                                   1
+                                 ;; else
+                                 9999)) ; changed
+    (let (outline-view-change-hook)
+      (save-excursion
+        (outline-back-to-heading t)
+        (outline-show-entry)
+        (while (condition-case nil (progn (outline-up-heading 1 t) (not (bobp)))
+	         (error nil))
+	  (outline-flag-region (1- (point))
+			       (save-excursion (forward-line 1) (point))
+			       nil))))
+    (run-hooks 'outline-view-change-hook)))
 ;; (defun outline-it-hide-others ()
 ;;   "Hide other headers and don't hide headers and text in opened."
 ;;   (interactive)

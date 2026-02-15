@@ -228,7 +228,7 @@ of the current heading, or to 1 if the current line is not a heading."
   (if (< levels 1)
       (error "Must keep at least one level of headers"))
   (save-excursion
-    (let* (outline-view-change-hook
+    (let* (outline-view-change-hook1
            (beg (progn
                   (goto-char (point-min))
                   ;; Skip the prelude, if any.
@@ -252,7 +252,7 @@ of the current heading, or to 1 if the current line is not a heading."
       (goto-char (point-max))
       (if (and (bolp) (not (bobp)) (outline-invisible-p (1- (point))))
           (outline-flag-region (1- (point)) (point) nil))))
-  (run-hooks 'outline-view-change-hook))
+  (run-hooks 'outline-view-change-hook1))
 
 ;;;###autoload
 (defun outline-it-hide-other ()
@@ -270,7 +270,7 @@ This also unhides the top heading-less body, if any.
                                    1
                                  ;; else
                                  9999)) ; changed
-    (let (outline-view-change-hook)
+    (let (outline-view-change-hook1)
       (save-excursion
         (outline-back-to-heading t)
         (outline-show-entry)
@@ -279,7 +279,7 @@ This also unhides the top heading-less body, if any.
 	  (outline-flag-region (1- (point))
 			       (save-excursion (forward-line 1) (point))
 			       nil))))
-    (run-hooks 'outline-view-change-hook)))
+    (run-hooks 'outline-view-change-hook1)))
 ;; (defun outline-it-hide-others ()
 ;;   "Hide other headers and don't hide headers and text in opened."
 ;;   (interactive)
@@ -353,7 +353,9 @@ Cases:
   ;;   (recenter 2))
   ;; )
 (defun outline-it--backtrace-jump-at-bottom-fix (&rest args)
-  "Check if at least 8 lines visible after jumping, if not recenter."
+  "Check if at least 8 lines visible after jumping, if not recenter.
+ARG not used.
+Optional argument ARGS not used."
   (ignore args)
   ;; (print (list "outline-it--backtrace-jump-at-bottom-fix" (point) (current-buffer)))
   (when (and (not (pos-visible-in-window-p (save-excursion
@@ -406,7 +408,7 @@ because `forward-sexp' call itself several times recursively."
   )
 
 (defun outline-it-advices-deactivation ()
-  "Undo `outline-it-any-mode-hook-function' changes also."
+  "Undo `outline-it-any-mode-hook-function' change also."
   (interactive)
   (advice-remove 'xref-find-definitions #'outline-it--jumping-to-invisible-fix)
   (advice-remove 'xref-go-back #'outline-it--jumping-to-invisible-fix)
@@ -420,8 +422,7 @@ because `forward-sexp' call itself several times recursively."
   (advice-remove 'backward-sexp #'outline-it--forward-sexp-fix)
   (remove-hook 'find-function-after-hook #'outline-it--jumping-to-invisible-fix)
   ;; restore indent function and remove hooks
-  (let ((outline-minor-mode nil)) (outline-it-outline-minor-mode-hook-function))
-  )
+  (let ((outline-minor-mode nil)) (outline-it-outline-minor-mode-hook-function)))
 ;; -= unqoute
 (defun outline-it--unquote-all (x)
   "Recursively remove any leading \='quote from a Lisp value.

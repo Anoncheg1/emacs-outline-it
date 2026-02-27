@@ -32,7 +32,8 @@
 ;; Add advices at loading!
 
 ;; Theare are tree types of usage that may be mixed.
-;; 1) by M-x outline-it, or with prepared (outline-it "regex") elisp call, that activate `outline-minor-mode' for current buffer.
+;; 1) by M-x outline-it, or with prepared (outline-it "regex") elisp
+;;   call, that activate `outline-minor-mode' for current buffer.
 ;; 2) to enhance `outline-minor-mode', we add hook to it
 ;; 3) enhance outline related functionality globally
 ;;
@@ -289,7 +290,8 @@ This also unhides the top heading-less body, if any.
 	  (outline-flag-region (1- (point))
 			       (save-excursion (forward-line 1) (point))
 			       nil))))
-    (run-hooks 'outline-view-change-hook)))
+    ;; (run-hooks 'outline-view-change-hook)
+    ))
 ;; (defun outline-it-hide-others ()
 ;;   "Hide other headers and don't hide headers and text in opened."
 ;;   (interactive)

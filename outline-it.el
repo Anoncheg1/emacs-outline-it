@@ -281,17 +281,17 @@ This also unhides the top heading-less body, if any.
                                    1
                                  ;; else
                                  9999)) ; changed
-    (let (outline-view-change-hook)
-      (save-excursion
-        (outline-back-to-heading t)
-        (outline-show-entry)
-        (while (condition-case nil (progn (outline-up-heading 1 t) (not (bobp)))
-	         (error nil))
-	  (outline-flag-region (1- (point))
-			       (save-excursion (forward-line 1) (point))
-			       nil))))
-    ;; (run-hooks 'outline-view-change-hook)
-    ))
+    ;; (let (outline-view-change-hook)
+    (save-excursion
+      (outline-back-to-heading t)
+      (outline-show-entry)
+      (while (condition-case nil (progn (outline-up-heading 1 t) (not (bobp)))
+	       (error nil))
+	(outline-flag-region (1- (point))
+			     (save-excursion (forward-line 1) (point))
+			     nil))))
+  ;; (run-hooks 'outline-view-change-hook)
+  )
 ;; (defun outline-it-hide-others ()
 ;;   "Hide other headers and don't hide headers and text in opened."
 ;;   (interactive)

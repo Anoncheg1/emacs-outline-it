@@ -120,7 +120,7 @@ Also called from `indent-according-to-mode'"
 
 (defun outline-it--header-search ()
   "We use part of `outline-regexp' string to isearch in headers.
-outline-regexp should not start with ^ character."
+`outline-regexp' should not start with ^ character."
   (when (and isearch-regexp (not (derived-mode-p 'dired-mode)))
         ;; (setq isearch-case-fold-search 1)   ; make searches case insensitive
         ;; (setq case-fold-search 1)   ; make searches case insensitive
@@ -237,7 +237,7 @@ of the current heading, or to 1 if the current line is not a heading."
   (if (< levels 1)
       (error "Must keep at least one level of headers"))
   (save-excursion
-    (let* (outline-view-change-hook1
+    (let* ( ; outline-view-change-hook1
            (beg (progn
                   (goto-char (point-min))
                   ;; Skip the prelude, if any.
@@ -261,7 +261,8 @@ of the current heading, or to 1 if the current line is not a heading."
       (goto-char (point-max))
       (if (and (bolp) (not (bobp)) (outline-invisible-p (1- (point))))
           (outline-flag-region (1- (point)) (point) nil))))
-  (run-hooks 'outline-view-change-hook1))
+  ;; (run-hooks 'outline-view-change-hook1)
+  )
 
 ;;;###autoload
 (defun outline-it-hide-other ()
@@ -279,7 +280,7 @@ This also unhides the top heading-less body, if any.
                                    1
                                  ;; else
                                  9999)) ; changed
-    (let (outline-view-change-hook1)
+    (let (outline-view-change-hook)
       (save-excursion
         (outline-back-to-heading t)
         (outline-show-entry)
@@ -288,7 +289,7 @@ This also unhides the top heading-less body, if any.
 	  (outline-flag-region (1- (point))
 			       (save-excursion (forward-line 1) (point))
 			       nil))))
-    (run-hooks 'outline-view-change-hook1)))
+    (run-hooks 'outline-view-change-hook)))
 ;; (defun outline-it-hide-others ()
 ;;   "Hide other headers and don't hide headers and text in opened."
 ;;   (interactive)

@@ -578,7 +578,7 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
   (setq outline-default-state 'outline-show-only-headings)
   ;; - Keys
   (keymap-set outline-minor-mode-map "<backtab>" 'outline-cycle-buffer) ;; S-tab
-  (keymap-set outline-minor-mode-map "C-c C-e" 'outline-it-hide-others) ;; hides `elisp-eval-region-or-buffer'
+  (keymap-set outline-minor-mode-map "C-c C-e" 'outline-it-hide-other) ;; hides `elisp-eval-region-or-buffer'
   ;; (keymap-local-set "C-c TAB" 'outline-hide-body)
   ;; (define-key outline-minor-mode-map [S-tab] 'outline-show-all)
   ;; (outline-hide-body)

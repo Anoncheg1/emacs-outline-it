@@ -9,15 +9,28 @@
 
 # Configuration
 
+Theare are tree types of usage that may be mixed.
+1) by M-x outline-it, or with prepared (outline-it "regex") elisp call, that activate `outline-minor-mode' for current buffer.
+2) to enhance `outline-minor-mode', we add hook to it
+3) enhance outline related functionality globally
+
+Configuration for 1,2,3)
+1) for manual activation by `outline-it'
 ```lisp
 (add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
 (require 'outline-it)
+```
+
+2) for all outline-minor modes or per some major mode:
+```lisp
+(add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook-function)
 (outline-it-advices-activation)
-;; configure TAB key and isearch C-M-s key if outline-it or outline-minor-mode activated
-(add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook-function) ; optional, for .emacs
-;; Or without outline-it and outline-minor-mode for any major mode.
-;; Variable `outline-regexp' should be set.
-(add-hook 'emacs-lisp-mode-hook 'outline-it-any-mode-hook-function)
+```
+
+3) for enhancing outline functionality that works without any activation
+```lisp
+(add-hook 'isearch-mode-hook #'outline-it--header-search)
+(outline-it-advices-activation)
 ```
 
 # Usage - by function

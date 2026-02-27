@@ -31,22 +31,28 @@
 ;;; Commentary:
 ;; Add advices at loading!
 
-;; Configuration:
+;; Theare are tree types of usage that may be mixed.
+;; 1) by M-x outline-it, or with prepared (outline-it "regex") elisp call, that activate `outline-minor-mode' for current buffer.
+;; 2) to enhance `outline-minor-mode', we add hook to it
+;; 3) enhance outline related functionality globally
+;;
+;; Configuration for 1,2,3)
+;; 1) for manual activation by `outline-it'
 ;; (add-to-list 'load-path "/path/to/this/package/emacs-outline-it")
 ;; (require 'outline-it)
-;; (outline-it-advices-activation) ; fixes for jumping
-;; ;; configure TAB key and isearch C-M-s key if outline-it or
-;; ;;   outline-minor-mode activated
-;; ;; optional, for .emacs :
-;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook)
-;; ;; Or without outline-it and outline-minor-mode for any major mode.
-;; ;; Variable `outline-regexp' should be set.
-;; ;; sh-mode sets '###' to `outline-regexp'
-;; (add-hook 'sh-mode-hook 'outline-it-any-mode-hook-function) ; optional
+
+;; 2) for all outline-minor modes or per some major mode:
+;; (add-hook 'outline-minor-mode-hook 'outline-it-outline-minor-mode-hook-function)
+;; (outline-it-advices-activation)
+
+;; 3) for enhancing outline functionality that works without any activation
+;; (add-hook 'isearch-mode-hook #'outline-it--header-search)
+;; (outline-it-advices-activation)
 ;;
 ;; Usage:
 ;; M-x outline-it-githubactionlog
 ;; M-x outline-it-python
+;; M-x outline-it
 
 ;; To deactivate:
 ;; ...
@@ -107,33 +113,36 @@ Also called from `indent-according-to-mode'"
         'noindent ; stop TAB sequence
         )
     ;; else - not header, call original
-    (print (list "outline-it-toggle2" outline-it--indent-line-function-original))
+    ;; (print (list "outline-it-toggle2" outline-it--indent-line-function-original))
     (indent--funcall-widened outline-it--indent-line-function-original)))
 
 ;; -= minor-mode-hook - for isearch and TAB key
 
 (defun outline-it--header-search ()
-  "We use part of `outline-regexp' string to isearch in headers."
-  (if isearch-regexp
-      (progn
-        (setq isearch-case-fold-search 1)   ; make searches case insensitive
-        (setq case-fold-search 1)   ; make searches case insensitive
-        (isearch-push-state)
-        (let ((string
-               (concat (car (string-split outline-regexp "\\\\|")) ".*")))
+  "We use part of `outline-regexp' string to isearch in headers.
+outline-regexp should not start with ^ character."
+  (when (and isearch-regexp (not (derived-mode-p 'dired-mode)))
+        ;; (setq isearch-case-fold-search 1)   ; make searches case insensitive
+        ;; (setq case-fold-search 1)   ; make searches case insensitive
+        ;; (isearch-push-state)
+        (let* ((string
+               (concat "^" (car (string-split outline-regexp "\\\\|")) ".*")))
+          (isearch-push-state)
           (isearch-process-search-string
-           string (mapconcat #'isearch-text-char-description string ""))))))
-
+           string (mapconcat #'isearch-text-char-description string "")))))
 
 (defun outline-it-outline-minor-mode-hook-function ()
   "Used for show/hide outline by `indent-for-tab-command'.
-`outline-regexp' variable used.
-Also configure isearch for C-M-s."
+When `outline-minor-mode' activated set:
+1) `indent-line-function'
+2) `isearch-string' for isearch searching by headers with C-M-s
+ `isearch-forward-regexp'.
+Uses `outline-regexp' variable"
   (if outline-minor-mode
     (progn
-      ;; - set
       ;; (print "outline-it-outline-minor-mode-hook1")
-      (add-hook 'isearch-mode-hook #'outline-it--header-search nil t)
+      (unless (member #'outline-it--header-search isearch-mode-hook) ; Check global hook
+        (add-hook 'isearch-mode-hook #'outline-it--header-search nil t)) ; Add hook locally
 
       (unless outline-it--indent-line-function-original
         (setq-local outline-it--indent-line-function-original indent-line-function) ; save

@@ -5,7 +5,7 @@
 ;; Author: <github.com/Anoncheg1,codeberg.org/Anoncheg>
 ;; Keywords: outlines, hypermedia, text, faces
 ;; URL: https://orgmode.org
-;; Package-Requires: ((emacs "28.1"))
+;; Package-Requires: ((emacs "29.1"))
 ;; Version: 0.1
 ;
 ;;; License
@@ -639,7 +639,8 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
   (when force-fontify
     (outline-it-minor-mode-highlight-buffer)
     (add-hook 'revert-buffer-restore-functions
-              #'outline-revert-buffer-rehighlight nil t))
+              ;; #'outline-revert-buffer-rehighlight nil t))
+              #'outline-minor-mode-highlight-buffer nil t))
 
   ;; hide headers according to `outline-default-state' variable
   (outline-apply-default-state)

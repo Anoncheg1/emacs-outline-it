@@ -336,7 +336,15 @@ Cases:
 - at hiddent line
 2) At empty line before header never give invisible."
   (ignore args)
+  ;; (message "in outline-it--jumping-to-invisible-fix")
+  ;; (print (list "outlien here1" (point) (looking-at outline-regexp)))
+
   (when (or
+         (looking-at outline-regexp)
+
+         (and (featurep 'ediffnw)
+              (when (intern "ediffnw-mode") t)) ; for unknown reason normal activations not working
+
          (and (save-match-data
                    (string-match outline-regexp
                                  (buffer-substring (line-beginning-position)
@@ -355,7 +363,15 @@ Cases:
                                                    (line-end-position 2)))
               (save-excursion (forward-line -1)
                               (eq (get-char-property (point) 'invisible) 'outline))))
-    (outline-show-entry)))
+    ;; (if (derived-mode-p 'org-mode)
+    ;; (condition-case nil
+        (if (derived-mode-p 'org-mode)
+            (outline-it-hide-other) ; for org mode
+          ;; else
+          (outline-show-entry))
+      ;; (error nil))
+      ;; (outline-show-entry)
+      )) ;  dont work good in Org mode
   ;; ;; additional fix to auto recenter
   ;; (when (and (pos-visible-in-window-p (save-excursion
   ;;                                       (forward-line 8)
@@ -374,7 +390,7 @@ Optional argument ARGS not used."
                                         (forward-line 8)
                                         (point))))
              (eq (window-buffer) (current-buffer))) ; if showed
-    (print "recenter my/backtrace-jump-at-bottom-fix")
+    ;; (print "recenter my/backtrace-jump-at-bottom-fix")
     (recenter)))
 
 ;; (add-hook 'xref-after-jump-hook #'my/fastfix)
@@ -393,8 +409,16 @@ because `forward-sexp' call itself several times recursively."
 (defun outline-it-advices-activation ()
   "Dont depend on `outline-minor-mode'."
   (interactive)
+  ;; jump to invisible
   (advice-add 'xref-find-definitions :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'xref-go-back :after #'outline-it--jumping-to-invisible-fix)
+  (when (featurep 'ediffnw)
+    (advice-add 'ediffnw-ediff-previous-difference :after #'outline-it--jumping-to-invisible-fix)
+    (advice-add 'ediffnw-ediff-next-difference :after #'outline-it--jumping-to-invisible-fix)
+    ;; (advice-add 'ediff-previous-difference :after #'outline-it--jumping-to-invisible-fix)
+    ;; (advice-add 'ediff-next-difference :after #'outline-it--jumping-to-invisible-fix)
+    )
+
   (advice-add 'xref-go-back :after #'outline-it--backtrace-jump-at-bottom-fix)
   ;; C-u C-SPC
   (advice-add 'pop-to-mark-command :after #'outline-it--jumping-to-invisible-fix)

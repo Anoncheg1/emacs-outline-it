@@ -1,11 +1,16 @@
 ![build](https://github.com/Anoncheg1/emacs-outline-it/workflows/melpazoid/badge.svg)
 
-# emacs-outline-it
+# emacs-outline-it - outline.el that works
+
+**Version 0.1**
+
+Emacs package, provide starter for outline-minor-mode and enhancements and fixes, that don't require activation of mode.
+
 
 # Features
-- fontification like in Org for any mode.
-- fixes for Outline mode for jumping such as xref and goto (advices activates at loading)
-- configure TAB key It by default bound to `indent-for-tab-command' we use `indent-line-function`.
+- **fontification** like in Org for any mode.
+- **fixes** for Outline mode for jumping such as xref and goto (advices activates at loading)
+- **better keys** or main commans, TAB key bound to `indent-for-tab-command` we use `indent-line-function`.
 
 # Configuration
 
@@ -58,9 +63,11 @@ For Elisp files:
 ((emacs-lisp-mode
   . (
      (outline-regexp . "^;;; ")
+     (outline-heading-alist . ((";;; " . 1)))
      (eval . (progn (keymap-local-set "C-c k" #'outline-previous-heading)
                     (keymap-local-set "C-c n" #'outline-next-heading)
-                    (keymap-local-set "C-c C-e" #'outline-it-hide-others)
+                    (when (featurep 'outline-it)
+                                    (keymap-local-set "C-c C-e" #'outline-it-hide-other))
                     (keymap-local-set "<backtab>" #'outline-cycle-buffer)
                     (keymap-local-set "C-<tab>" #'outline-toggle-children)
                     (outline-hide-body)
@@ -73,9 +80,11 @@ For Bash files:
 ((sh-mode
   . (
      (outline-regexp . "^# -- ")
+     (outline-heading-alist . (("# -- " . 1)))
      (eval . (progn (keymap-local-set "C-c k" #'outline-previous-heading)
                     (keymap-local-set "C-c n" #'outline-next-heading)
-                    (keymap-local-set "C-c C-e" #'outline-it-hide-others)
+                    (when (featurep 'outline-it)
+                                    (keymap-local-set "C-c C-e" #'outline-it-hide-other))
                     (keymap-local-set "<backtab>" #'outline-cycle-buffer)
                     (keymap-local-set "C-<tab>" #'outline-toggle-children)
                     (outline-hide-body) ;; or (outline-cycle-buffer 5) ;; narrow by building levels by 5 first characters

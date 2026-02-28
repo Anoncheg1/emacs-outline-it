@@ -5,7 +5,7 @@
 ;; Author: <github.com/Anoncheg1,codeberg.org/Anoncheg>
 ;; Keywords: outlines, hypermedia, text, faces
 ;; URL: https://orgmode.org
-;; Package-Requires: ((emacs "30.1"))
+;; Package-Requires: ((emacs "28.1"))
 ;; Version: 0.1
 ;
 ;;; License

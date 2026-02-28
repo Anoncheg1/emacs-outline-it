@@ -343,7 +343,7 @@ Cases:
          (looking-at outline-regexp)
 
          (and (featurep 'ediffnw)
-              (when (intern "ediffnw-mode") t)) ; for unknown reason normal activations not working
+              (bound-and-true-p ediffnw-mode)) ; for unknown reason normal activations not working
 
          (and (save-match-data
                    (string-match outline-regexp

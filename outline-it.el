@@ -121,13 +121,18 @@ Also called from `indent-according-to-mode'"
 
 (defun outline-it--header-search ()
   "We use part of `outline-regexp' string to isearch in headers.
-`outline-regexp' should not start with ^ character."
+`outline-regexp' should not start with ^ character. C-M-s key"
   (when (and isearch-regexp (not (derived-mode-p 'dired-mode)))
         ;; (setq isearch-case-fold-search 1)   ; make searches case insensitive
         ;; (setq case-fold-search 1)   ; make searches case insensitive
         ;; (isearch-push-state)
-        (let* ((string
-               (concat "^" (car (string-split outline-regexp "\\\\|")) ".*")))
+        (let* ((string (concat outline-regexp
+                        ;; (car (string-split outline-regexp "\\\\|"))
+                               ".*"))
+               (string (if (string-prefix-p "^" string)
+                           string
+                         ;; else
+                         (concat "^" string))))
           (isearch-push-state)
           (isearch-process-search-string
            string (mapconcat #'isearch-text-char-description string "")))))

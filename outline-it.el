@@ -126,13 +126,21 @@ Also called from `indent-according-to-mode'"
         ;; (setq isearch-case-fold-search 1)   ; make searches case insensitive
         ;; (setq case-fold-search 1)   ; make searches case insensitive
         ;; (isearch-push-state)
-        (let* ((string (concat outline-regexp
-                        ;; (car (string-split outline-regexp "\\\\|"))
-                               ".*"))
-               (string (if (string-prefix-p "^" string)
+        (let* (;; ^ at the begining
+	       (string outline-regexp)
+	       (string (if (string-prefix-p "^" string)
                            string
                          ;; else
-                         (concat "^" string))))
+                         (concat "^" string)))
+               ;; surround with ( ) if there is several parts
+               (string (if (string-match "\|" outline-regexp)
+                           (concat "\\(" string "\\)")
+                         ;; else
+                         string))
+               ;; .* at the end
+               (string (concat string
+                        ;; (car (string-split outline-regexp "\\\\|"))
+                               ".*")))
           (isearch-push-state)
           (isearch-process-search-string
            string (mapconcat #'isearch-text-char-description string "")))))

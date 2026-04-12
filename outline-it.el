@@ -139,7 +139,6 @@ Also called from `indent-according-to-mode'"
                          string))
                ;; .* at the end
                (string (concat string
-                        ;; (car (string-split outline-regexp "\\\\|"))
                                ".*")))
           (isearch-push-state)
           (isearch-process-search-string
@@ -443,6 +442,8 @@ because `forward-sexp' call itself several times recursively."
   ;; checkdoc-create-error
   (advice-add 'checkdoc-create-error :before #'outline-it--jumping-to-invisible-fix)
   (advice-add 'undo :after #'outline-it--jumping-to-invisible-fix)
+  ;; For org-links, called in `org-links-additional-formats'
+  (advice-add 'org-goto-line :after #'outline-it--jumping-to-invisible-fix)
   ;; dangerous
   (advice-add 'forward-sexp :after #'outline-it--forward-sexp-fix)
   (advice-add 'backward-sexp :after #'outline-it--forward-sexp-fix)

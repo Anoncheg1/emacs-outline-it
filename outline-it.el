@@ -55,7 +55,7 @@
 ;; M-x outline-it-python
 ;; M-x outline-it
 
-;; To deactivate:
+;; To deactivate: M-x outline-minor-mode
 ;; ...
 ;;
 ;; for outline-it-any-mode-hook-function:
@@ -438,6 +438,8 @@ because `forward-sexp' call itself several times recursively."
   (advice-add 'compile-goto-error :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'help-function-def--button-function :after #'outline-it--jumping-to-invisible-fix)
   (advice-add 'help-function-def--button-function :after #'outline-it--backtrace-jump-at-bottom-fix)
+  ;; Jumping to register
+  (advice-add 'jump-to-register :after #'outline-it--jumping-to-invisible-fix)
   ;; checkdoc
   ;; checkdoc-create-error
   (advice-add 'checkdoc-create-error :before #'outline-it--jumping-to-invisible-fix)
@@ -447,6 +449,8 @@ because `forward-sexp' call itself several times recursively."
   ;; dangerous
   (advice-add 'forward-sexp :after #'outline-it--forward-sexp-fix)
   (advice-add 'backward-sexp :after #'outline-it--forward-sexp-fix)
+  (advice-add 'backward-sexp :after #'outline-it--forward-sexp-fix)
+
 
   ;; (advice-remove 'forward-sexp-default-function #'outline-it--jumping-to-invisible-fix-advanced)
   ;; (advice-remove 'backward-sexp #'outline-it--jumping-to-invisible-fix)
@@ -704,6 +708,25 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
       ;; No need for (goto-char ...) after (re-search-forward)
       )))
 
+
+;; -= Bash help functions - FAILED
+
+;; (defvar-local outline-it--bash-outline nil)
+
+;; (defun outline-it--bash-outline-end-of-subtree-heading (orig-fun &rest args)
+;;   "Jump to the closing '}' (with optional comment) for Bash function blocks."
+;;   (interactive)
+;;   (if (bound-and-true-p outline-it--bash-outline)
+;;       (when (re-search-forward "^[ \t]*}[ \t]*\\(#.*\\)?$" nil t)
+;;         (beginning-of-line))
+;;     ;; else
+;;     (apply orig-fun args)))
+
+;; (defun outline-it--bash-limit-end-of-subtree-heading ()
+;;   (setq-local outline-it--bash-outline t)
+;;   (advice-add 'outline-end-of-subtree :around #'outline-it--bash-outline-end-of-subtree-heading)
+;;   (advice-add 'outline-back-to-heading :around #'outline-it--bash-outline-end-of-subtree-heading))
+
 ;; -= implementations
 ;;;###autoload
 (defun outline-it-python ()
@@ -719,11 +742,22 @@ font-lock overrided with outline mode fonts for `outline-regexp'."
 where is goups with substring ##[group].
 To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
   (interactive)
-  (lisp-mode)
+  (emacs-lisp-mode)
   (outline-it "^# -- \\|.*##\\[group]\\|.*⸺ "
               '(("^# -- " . 1) ("##\\[group]" . 2) ("⸺ " . 3))
               t ; force-fintify
               ))
+
+
+;; ;;;###autoload
+;; (defun outline-it-bash ()
+;;   "For Github Action Melpazoid log.
+;; where is goups with substring ##[group].
+;; To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
+;;   (interactive)
+;;   (outline-it "^\\s-*\\(?:function\\s-*\\)?[-a-zA-Z_][-a-zA-Z0-9_]*\\s-*\\(?:()\\s-*\\)?{"
+;;               '(("^\\s-*\\(?:function\\s-*\\)?[-a-zA-Z_][-a-zA-Z0-9_]*\\s-*\\(?:()\\s-*\\)?{" . 1)))
+;;   (outline-it--bash-limit-end-of-subtree-heading))
 
 ;;;###autoload
 (defun outline-it-bash ()
@@ -731,8 +765,18 @@ To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
 where is goups with substring ##[group].
 To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
   (interactive)
-  (outline-it "^# -- "
+  (outline-it nil
               '(("^# -- " . 1))))
+
+
+;;;###autoload
+(defun outline-it-markdown ()
+  "For Github Action Melpazoid log.
+where is goups with substring ##[group].
+To check use: (search-forward-regexp (regexp-quote \"##[group]\"))"
+  (interactive)
+  (outline-it nil
+              '(("^# " . 1) ("^## " . 2) ("^### " . 3))))
 
 
 ;; -= ? org bug ?

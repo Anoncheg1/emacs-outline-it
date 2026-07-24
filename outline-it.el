@@ -431,6 +431,9 @@ because `forward-sexp' call itself several times recursively."
     ;; (advice-add 'ediff-next-difference :after #'outline-it--jumping-to-invisible-fix)
     )
 
+  (when (featurep 'cui)
+    (advice-add 'cui-block-next-item :after #'outline-it--jumping-to-invisible-fix))
+
   (advice-add 'xref-go-back :after #'outline-it--backtrace-jump-at-bottom-fix)
   ;; C-u C-SPC
   (advice-add 'pop-to-mark-command :after #'outline-it--jumping-to-invisible-fix)

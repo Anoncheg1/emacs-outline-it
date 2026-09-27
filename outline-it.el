@@ -378,7 +378,8 @@ Cases:
     ;; (if (derived-mode-p 'org-mode)
     ;; (condition-case nil
         (if (derived-mode-p 'org-mode)
-            (outline-it-hide-other) ; for org mode
+            (org-fold-reveal '(4))
+            ;; (outline-it-hide-other) ; for org mode - MAIN!
           ;; else
           (outline-show-entry))
       ;; (error nil))
